@@ -95,6 +95,12 @@ th{font-weight:700;border-bottom:2px solid var(--ink)}
 .quiz .opts button.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
 .quiz .fb{font-size:15px;color:var(--mute);margin-top:6px}
 .note{font-size:14px;color:var(--mute)}
+.upd{background:color-mix(in srgb,var(--red) 12%,var(--bg));border-bottom:1px solid var(--red);padding:10px max(5vw,16px);font-size:15px}
+.updbox{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.updlist{display:grid;gap:6px;margin:10px 0}
+.updlist div{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:15px}
+.badge{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;white-space:nowrap;border:1px solid var(--line);color:var(--mute)}
+.badge.new{background:var(--red);border-color:var(--red);color:var(--bg)}
 footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
 @media(max-width:900px){.lab{grid-template-columns:minmax(0,1fr)}.lab .side{order:2}.two,.cols,.seqv{grid-template-columns:minmax(0,1fr)}.explain{position:static}}
 @media(max-width:600px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:8px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute);font-size:12px}.fig{min-height:300px}}
@@ -110,9 +116,10 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
  </div>
 </header>
 <nav aria-label="章節"><div class="wrap">
- <a href="#lab">GRE 實驗室</a><a href="#intro">認識 Pulseq</a><a href="#install">安裝</a><a href="#core">核心概念</a><a href="#fid">FID</a><a href="#verify">驗證</a><a href="#seqfile">.seq 檔</a><a href="#scan">上機</a><a href="#recon">重建</a><a href="#debug">除錯</a><a href="#quiz">測驗</a><a href="#res">資源</a>
+ <a href="#lab">GRE 實驗室</a><a href="#intro">認識 Pulseq</a><a href="#outcome">學完能做什麼</a><a href="#install">安裝</a><a href="#core">核心概念</a><a href="#fid">FID</a><a href="#verify">驗證</a><a href="#seqfile">.seq 檔</a><a href="#scan">上機</a><a href="#recon">重建</a><a href="#debug">除錯</a><a href="#quiz">測驗</a><a href="#res">資源</a>
 </div></nav>
 
+<div id="updbanner" class="upd" hidden><div class="wrap"><span id="updtext"></span> <a href="#res">查看</a></div></div>
 <main>
 <section class="band" id="lab"><div class="wrap">
  <h2>GRE 實驗室：一個 TR 長什麼樣</h2>
@@ -168,6 +175,31 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
    <li>上機：廠商直譯器執行</li>
    <li>重建：從原始資料 reshape、iFFT 或 NUFFT</li>
   </ol>
+ </div>
+</div></section>
+
+<section class="band lesson" id="outcome"><div class="wrap cols">
+ <div>
+  <h2>學完能做什麼</h2>
+  <ul>
+   <li>用 MATLAB 或 Python 從零寫出 FID、2D GRE 序列，並看懂官方範例（SE、TSE、EPI、螺旋）再改成自己要的版本</li>
+   <li>自己算 TE/TR 延遲、梯度面積和 k-space，知道參數為什麼「設不下去」</li>
+   <li>上機前用時序檢查、波形圖、k-space、PNS 與模擬確認序列沒問題</li>
+   <li>看懂 <code>.seq</code> 檔；取得直譯器後能在掃描儀執行，並從原始資料重建影像</li>
+   <li>把序列以 <code>.seq</code> 檔分享，讓別人重現你的實驗</li>
+  </ul>
+  <p class="note">本手冊是入門：學完約是「能獨立做出並驗證基本序列」的程度。開發新技術還需要更深的 MR 物理、RF 脈衝設計與重建知識。</p>
+ </div>
+ <div>
+  <h2>需要的軟體與設備</h2>
+  <div class="tbl"><table class="stack"><thead><tr><th>用途</th><th>需要什麼</th></tr></thead><tbody>
+   <tr><td>看網頁、玩 GRE 實驗室</td><td>任何瀏覽器，手機也可以</td></tr>
+   <tr><td>寫序列</td><td>一般電腦，加上 MATLAB（需授權）或免費的 GNU Octave；或 Python 3.10 以上與 <code>pip install pypulseq</code>；Google Colab 也行</td></tr>
+   <tr><td>模擬（選用）</td><td>MRzero（Python）或 KomaMRI（Julia），皆免費</td></tr>
+   <tr><td>上機掃描</td><td>已安裝 Pulseq 直譯器的 MRI 掃描儀（通常需與廠商簽研究合作協議）、假體；掃描人體需 IRB 核准</td></tr>
+   <tr><td>重建</td><td>MATLAB 的 mapVBVD 或 Python 的 twixtools（Siemens 原始資料）</td></tr>
+  </tbody></table></div>
+  <p class="note">沒有掃描儀也能學完大部分：寫序列、檢查與模擬只需要一台電腦。</p>
  </div>
 </div></section>
 
@@ -291,6 +323,10 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
  </div>
  <div>
   <h2>資源</h2>
+  <div class="updbox"><b>官方資源更新狀態</b> <span class="note" id="updwhen"></span>
+   <div id="updlist" class="updlist"></div>
+   <button type="button" id="updbtn">重新檢查</button>
+  </div>
   <ul>
    <li><a href="https://pulseq.github.io/">Pulseq 官方網站</a>：文件、範例、規格書</li>
    <li><a href="https://pulseq.github.io/news.html">Pulseq 最新消息</a>：直譯器發布、課程、使用者聚會</li>
@@ -666,6 +702,36 @@ const drawQ=()=>{
 $('#qs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.q;if(qa[i]!==undefined)return;qa[i]=+b.dataset.o;store.set('pq-quiz',qa);drawQ()});
 $('#qreset').addEventListener('click',()=>{qa={};store.set('pq-quiz',qa);drawQ()});
 drawQ();
+
+// resource update check (works on GitHub Pages; blocked where cross-site fetch is not allowed)
+const BASE='2026-11-27';
+const SRC=[
+ {name:'Pulseq 網站與最新消息',url:'https://pulseq.github.io/news.html',api:'https://api.github.com/repos/pulseq/pulseq.github.io/commits?per_page=1',base:'2026-10-22T19:35:30Z',get:j=>({date:j[0].commit.committer.date,label:j[0].commit.message.split('\n')[0]})},
+ {name:'Pulseq MATLAB 原始碼',url:'https://github.com/pulseq/pulseq',api:'https://api.github.com/repos/pulseq/pulseq/commits?per_page=1',base:'2026-10-22T19:34:20Z',get:j=>({date:j[0].commit.committer.date,label:j[0].commit.message.split('\n')[0]})},
+ {name:'Pulseq 正式版本',url:'https://github.com/pulseq/pulseq/releases',api:'https://api.github.com/repos/pulseq/pulseq/releases?per_page=5',base:'2025-08-29T11:27:56Z',get:j=>{const r=j.slice().sort((a,b)=>b.published_at.localeCompare(a.published_at))[0];return{date:r.published_at,label:r.tag_name}}},
+ {name:'PyPulseq 版本',url:'https://github.com/imr-framework/pypulseq/releases',api:'https://api.github.com/repos/imr-framework/pypulseq/releases?per_page=5',base:'2026-11-24T09:48:33Z',get:j=>{const r=j.slice().sort((a,b)=>b.published_at.localeCompare(a.published_at))[0];return{date:r.published_at,label:r.tag_name}}}
+];
+const day=d=>d.slice(0,10);
+function showUpd(res,when){
+ const seen=store.get('pq-seen',{});let nNew=0;
+ $('#updlist').innerHTML=SRC.map((s,i)=>{const r=res[i];if(!r)return `<div><a href="${s.url}">${esc(s.name)}</a><span class="note">無法取得</span></div>`;
+  const newer=r.date>s.base,unseen=seen[i]&&r.date>seen[i];if(newer)nNew++;
+  return `<div><a href="${s.url}">${esc(s.name)}</a><span class="mono">${esc(r.label.slice(0,60))}</span><span class="note">${esc(day(r.date))}</span>${newer?'<span class="badge new">手冊撰寫後有更新</span>':'<span class="badge">與手冊一致</span>'}${unseen?'<span class="badge new">上次造訪後新增</span>':''}</div>`}).join('');
+ $('#updwhen').textContent=when?`檢查於 ${when}；手冊內容以 ${BASE} 為準`:'';
+ const seenNow={};res.forEach((r,i)=>{if(r)seenNow[i]=r.date});
+ if(Object.keys(seenNow).length)setTimeout(()=>store.set('pq-seen',Object.assign(seen,seenNow)),0);
+ if(nNew){$('#updtext').textContent=`官方資源有 ${nNew} 項在手冊撰寫（${BASE}）後更新，部分內容可能需要對照最新版。`;$('#updbanner').hidden=false}else $('#updbanner').hidden=true;
+}
+async function checkUpd(force){
+ const c=store.get('pq-upd',null);
+ if(!force&&c&&Date.now()-c.t<6*3600e3){showUpd(c.res,new Date(c.t).toLocaleString('zh-TW'));return}
+ $('#updlist').innerHTML='<span class="note">檢查中…</span>';
+ const res=await Promise.all(SRC.map(s=>fetch(s.api,{headers:{Accept:'application/vnd.github+json'}}).then(r=>r.ok?r.json():Promise.reject()).then(s.get).catch(()=>null)));
+ if(res.every(r=>!r)){$('#updlist').innerHTML='<span class="note">目前無法連線檢查（例如在 Claude 內預覽，或 GitHub 暫時限流）。請在 GitHub Pages 版開啟，或直接點下方連結查看。</span>';$('#updwhen').textContent='';return}
+ store.set('pq-upd',{t:Date.now(),res});showUpd(res,new Date().toLocaleString('zh-TW'));
+}
+$('#updbtn').addEventListener('click',()=>checkUpd(true));
+checkUpd(false);
 }
 </script>
 </body>
