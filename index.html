@@ -65,7 +65,11 @@ svg text{paint-order:stroke;stroke:var(--bg);stroke-width:4px;font-family:"Noto 
 .scrub{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px}
 .scrub input[type=range]{flex:1 1 200px;accent-color:var(--red);min-height:44px;border:0;background:none;padding:0}
 .two{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:28px;margin-top:24px;align-items:start}
-.ks{min-height:340px}
+.ks{min-height:340px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+#kssvg{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#kssvg.grab{cursor:grabbing}
+.kbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.kbar button{min-height:40px;padding:6px 12px}
 .code{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:12px 0}
 .code .bar{display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--panel);border-bottom:1px solid var(--line)}
 .code .bar button{min-height:36px;padding:4px 12px;font-size:14px}
@@ -159,8 +163,9 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
  <div class="two">
   <div>
    <h3 style="margin-top:0">k-space 軌跡</h3>
-   <div class="fig ks"><svg id="kssvg" role="img" aria-label="目前 TR 的 k-space 軌跡"></svg></div>
-   <p class="note">時序圖各梯度軸分別縮放，方便看形狀；實際振幅請看「最大梯度」。斜線是預置梯度（Gx 與 Gy 同時作用），紅色實線是讀出，點是 ADC 取樣，最後的箭頭是 spoiler 把磁化推離。</p>
+   <div class="kbar" role="group" aria-label="k-space 縮放"><button type="button" id="kin" aria-label="放大">＋</button><button type="button" id="kout2" aria-label="縮小">－</button><button type="button" id="kall">看完整路徑</button><button type="button" id="kreset">重設</button><span class="mono note" id="kzoom">×1.0</span></div>
+   <div class="fig ks"><svg id="kssvg" role="img" tabindex="0" aria-label="目前 TR 的 k-space 軌跡，可用滾輪或雙指縮放、拖曳平移、＋－鍵縮放、方向鍵平移、0 重設"></svg></div>
+   <p class="note">滾輪或雙指縮放，拖曳平移，雙擊重設；放大後會顯示每一個 ADC 取樣點。時序圖各梯度軸分別縮放，方便看形狀；實際振幅請看「最大梯度」。斜線是預置梯度（Gx 與 Gy 同時作用），紅色實線是讀出，點是 ADC 取樣，最後的箭頭是 spoiler 把磁化推離。</p>
   </div>
   <div>
    <h3 style="margin-top:0">對應的程式碼（隨參數更新）</h3>
@@ -460,23 +465,45 @@ function drawSeq(){
  sv.innerHTML=o;
 }
 
+const KV={z:1,x:0,y:0};
 function drawK(){
  const r=RES;if(!r)return;
  const W=ks.clientWidth,H=ks.clientHeight,m=26,S=Math.min(W,H)-2*m,cx=W/2,cy=H/2;
- const kx=r.gxArea/2*1.3,ky=r.pyMax*1.2,X=k=>cx+k/kx*S/2,Y=k=>cy-k/ky*S/2;
+ const kx=r.gxArea/2*1.3,ky=r.pyMax*1.2,sx=S/2/kx*KV.z,sy=S/2/ky*KV.z;
+ const X=k=>cx+(k-KV.x)*sx,Y=k=>cy-(k-KV.y)*sy;
+ ks._inv={cx,cy,sx,sy};
  const mute='var(--mute)',red='var(--red)',ln='var(--line)';
- let o=`<defs><marker id="ka" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${red}"/></marker></defs>`;
- o+=`<line x1="${cx-S/2}" x2="${cx+S/2}" y1="${cy}" y2="${cy}" stroke="${mute}"/><line x1="${cx}" x2="${cx}" y1="${cy-S/2}" y2="${cy+S/2}" stroke="${mute}"/>`;
- const step=Math.max(1,Math.ceil(P.ny/48)),xa=P.nx*r.dk/2;
- for(let j=0;j<P.ny;j+=step){const k=(j-P.ny/2)*r.dk;o+=`<line x1="${X(-xa)}" x2="${X(xa)}" y1="${Y(k)}" y2="${Y(k)}" stroke="${ln}"/>`}
- const kyc=(line-1-P.ny/2)*r.dk,xs=r.gxArea/2;
+ let o=`<defs><marker id="ka" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${red}"/></marker><clipPath id="kclip"><rect x="0" y="0" width="${W}" height="${H}"/></clipPath></defs><g clip-path="url(#kclip)">`;
+ o+=`<line x1="0" x2="${W}" y1="${Y(0)}" y2="${Y(0)}" stroke="${mute}"/><line x1="${X(0)}" x2="${X(0)}" y1="0" y2="${H}" stroke="${mute}"/>`;
+ const xa=P.nx*r.dk/2,step=Math.max(1,Math.ceil(P.ny/(48*KV.z)));
+ for(let j=0;j<P.ny;j+=step){const k=(j-P.ny/2)*r.dk,y=Y(k);if(y<-2||y>H+2)continue;o+=`<line x1="${X(-xa)}" x2="${X(xa)}" y1="${y}" y2="${y}" stroke="${ln}"/>`}
+ const kyc=(line-1-P.ny/2)*r.dk,xs=r.gxArea/2,xe=xs+r.gxSp.amp*(r.gxSp.rise+r.gxSp.flat);
  o+=`<path d="M${X(0)} ${Y(0)}L${X(-xs)} ${Y(kyc)}" fill="none" stroke="${red}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
  o+=`<path d="M${X(-xs)} ${Y(kyc)}L${X(xs)} ${Y(kyc)}" fill="none" stroke="${red}" stroke-width="2.5"/>`;
- const ns=Math.min(P.nx,40);for(let s=0;s<ns;s++){const k=-xa+(s+.5)*2*xa/ns;o+=`<circle cx="${X(k)}" cy="${Y(kyc)}" r="2.2" fill="${red}"/>`}
- o+=`<path d="M${X(xs)} ${Y(kyc)}L${X(kx*.98)} ${Y(kyc*.25)}" fill="none" stroke="${red}" stroke-width="1.5" marker-end="url(#ka)"/>`;
- o+=`<text x="${cx+S/2}" y="${cy-6}" text-anchor="end" font-size="12" fill="${mute}">kx</text><text x="${cx+6}" y="${cy-S/2+12}" font-size="12" fill="${mute}">ky</text><text x="${m}" y="${H-6}" font-size="12" fill="${mute}">ky = ${kyc.toFixed(1)} 1/m</text>`;
+ const ns=Math.min(P.nx,Math.round(40*KV.z));for(let q=0;q<ns;q++){const k=-xa+(q+.5)*2*xa/ns,x=X(k);if(x<-4||x>W+4)continue;o+=`<circle cx="${x}" cy="${Y(kyc)}" r="${KV.z>2?2.8:2.2}" fill="${red}"/>`}
+ o+=`<path d="M${X(xs)} ${Y(kyc)}L${X(xe)} ${Y(0)}" fill="none" stroke="${red}" stroke-width="1.5" marker-end="url(#ka)"/>`;
+ o+=`</g><text x="${W-8}" y="${Math.min(H-24,Math.max(14,Y(0)-6))}" text-anchor="end" font-size="12" fill="${mute}">kx</text><text x="${Math.min(W-30,Math.max(6,X(0)+6))}" y="14" font-size="12" fill="${mute}">ky</text><text x="8" y="${H-6}" font-size="12" fill="${mute}">ky = ${kyc.toFixed(1)} 1/m${ns<P.nx?'　點 = 抽樣顯示':'　點 = 全部 ADC 取樣'}</text>`;
  ks.innerHTML=o;
+ $('#kzoom').textContent='×'+(KV.z<10?KV.z.toFixed(1):Math.round(KV.z));
 }
+const kZoomAt=(f,px,py)=>{const v=ks._inv;if(!v)return;const z2=Math.min(64,Math.max(.25,KV.z*f));if(px===undefined){px=v.cx;py=v.cy}const kxp=KV.x+(px-v.cx)/v.sx,kyp=KV.y-(py-v.cy)/v.sy;const g=z2/KV.z;KV.x=kxp-(kxp-KV.x)/g;KV.y=kyp-(kyp-KV.y)/g;KV.z=z2;drawK()};
+const kReset=()=>{KV.z=1;KV.x=0;KV.y=0;drawK()};
+const kPt=e=>{const b=ks.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+ks.addEventListener('wheel',e=>{e.preventDefault();const[px,py]=kPt(e);kZoomAt(Math.exp(-e.deltaY*.0015),px,py)},{passive:false});
+const ptrs=new Map();let pinch=null;
+ks.addEventListener('pointerdown',e=>{e.preventDefault();ks.focus({preventScroll:true});ks.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,kPt(e));ks.classList.add('grab');if(ptrs.size===2){const[a,b]=[...ptrs.values()];pinch=Math.hypot(a[0]-b[0],a[1]-b[1])}});
+ks.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId),cur=kPt(e);ptrs.set(e.pointerId,cur);const v=ks._inv;
+ if(ptrs.size===1){KV.x-=(cur[0]-prev[0])/v.sx;KV.y+=(cur[1]-prev[1])/v.sy;drawK()}
+ else if(ptrs.size===2&&pinch){const[a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d>0){kZoomAt(d/pinch,(a[0]+b[0])/2,(a[1]+b[1])/2);pinch=d}}});
+const kUp=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size)ks.classList.remove('grab')};
+ks.addEventListener('pointerup',kUp);ks.addEventListener('pointercancel',kUp);
+ks.addEventListener('dblclick',kReset);
+ks.addEventListener('keydown',e=>{const v=ks._inv;if(!v)return;const d=40;const k={'+':()=>kFocus(1.4),'=':()=>kFocus(1.4),'-':()=>kFocus(1/1.4),'0':kReset,ArrowLeft:()=>{KV.x-=d/v.sx;drawK()},ArrowRight:()=>{KV.x+=d/v.sx;drawK()},ArrowUp:()=>{KV.y+=d/v.sy;drawK()},ArrowDown:()=>{KV.y-=d/v.sy;drawK()}}[e.key];if(k){e.preventDefault();k()}});
+const kFocus=f=>{const r=RES;if(!r)return;const kyc=(line-1-P.ny/2)*r.dk;if(KV.z*f>=1){KV.x=0;KV.y=kyc}kZoomAt(f)};
+$('#kin').addEventListener('click',()=>kFocus(1.6));
+$('#kout2').addEventListener('click',()=>kFocus(1/1.6));
+$('#kreset').addEventListener('click',kReset);
+$('#kall').addEventListener('click',()=>{const r=RES;if(!r)return;const xe=r.gxArea/2+r.gxSp.amp*(r.gxSp.rise+r.gxSp.flat),kx=r.gxArea/2*1.3;KV.z=Math.min(1,kx/((xe+r.gxArea/2)/2*1.1));KV.x=(xe-r.gxArea/2)/2;KV.y=0;drawK()});
 
 function genCode(p){
  const m=`sys = mr.opts('MaxGrad', ${p.gmax}, 'GradUnit', 'mT/m', 'MaxSlew', ${p.smax}, 'SlewUnit', 'T/m/s', ...
