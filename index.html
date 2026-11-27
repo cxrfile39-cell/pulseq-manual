@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pulseq 互動手冊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday learning tool, precise like a lab notebook
+   IDEA the pulse-sequence timing diagram printed in an MR physics textbook, made live
+   PICTURE one TR of a 2D GRE: RF, Gz, Gy, Gx, ADC lanes with block borders, TE bracket, plus its k-space path
+   COLOUR white plate, ink, carmine for RF/TE, prussian for gradients; deep prussian header band
+   TYPE Noto Serif TC titles, Noto Sans TC text, JetBrains Mono code
+   LAYOUT laptop: controls column left, diagram + figures right, k-space + code below; phone: title, diagram, controls */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1217);--ink:light-dark(#10131a,#e9ebf1);--mute:light-dark(#596070,#9aa3b3);--line:light-dark(#e2e5ea,#283040);--panel:light-dark(#f4f6f9,#161c25);--red:light-dark(#c1121f,#ff6b74);--blue:light-dark(#0b4f8a,#7cbaff);--ok:light-dark(#17703a,#5fd08a);--warn:light-dark(#9a5b00,#f2b452);--head:#0b3a66}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Noto Sans TC",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Noto Serif TC",serif;line-height:1.15;letter-spacing:-.01em;margin:0 0 .5em;text-wrap:balance}
+h1{font-size:clamp(32px,5vw,48px)}
+h2{font-size:clamp(24px,3vw,32px);margin-top:.2em}
+h3{font-size:19px;margin-top:1.4em}
+p{margin:0 0 .9em;max-width:70ch}
+a{color:var(--blue)}
+code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13.5px}
+code{overflow-wrap:anywhere}
+.band{padding-block:clamp(28px,4vw,56px);padding-left:max(5vw,16px);padding-right:max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+header.band{background:var(--head);color:#fff;padding-bottom:24px}
+header p{color:#d5e3f2;font-size:17px}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding:6px max(5vw,16px)}
+nav a{flex:none;text-decoration:none;color:var(--ink);padding:10px 12px;border-radius:8px;font-size:15px}
+nav a:hover,nav a:focus-visible{background:var(--panel)}
+.lab{display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px;align-items:start}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.ctrl .row{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:8px;align-items:center;margin-bottom:8px}
+.ctrl label{font-size:14px}
+.ctrl label small{color:var(--mute)}
+input,select{font:16px "Noto Sans TC",sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-height:40px}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button{font:15px "Noto Sans TC",sans-serif;min-height:44px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--blue)}
+button.on{background:var(--blue);color:var(--bg);border-color:var(--blue)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.presets button{min-height:40px;font-size:14px;padding:6px 10px}
+.figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 18px;margin-bottom:12px}
+.figs div{border-top:2px solid var(--ink);padding-top:6px}
+.figs b{display:block;font:600 clamp(20px,2.4vw,26px)/1.1 "JetBrains Mono",monospace;white-space:nowrap}
+.figs span{font-size:13px;color:var(--mute)}
+.fig{position:relative;min-height:360px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{paint-order:stroke;stroke:var(--bg);stroke-width:4px;font-family:"Noto Sans TC",sans-serif}
+.status{border-left:4px solid var(--ok);padding:8px 12px;background:var(--panel);margin:10px 0;font-size:15px}
+.status.bad{border-color:var(--red)}
+.status.warn{border-color:var(--warn)}
+.status li{margin:2px 0}
+.status ul{margin:0;padding-left:1.2em}
+.scrub{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px}
+.scrub input[type=range]{flex:1 1 200px;accent-color:var(--red);min-height:44px;border:0;background:none;padding:0}
+.two{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:28px;margin-top:24px;align-items:start}
+.ks{min-height:340px}
+.code{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:12px 0}
+.code .bar{display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--panel);border-bottom:1px solid var(--line)}
+.code .bar button{min-height:36px;padding:4px 12px;font-size:14px}
+.code .bar .cp{margin-left:auto}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;max-height:440px;line-height:1.55}
+.lesson{border-top:1px solid var(--line)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:700;border-bottom:2px solid var(--ink)}
+.seqv{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.seqv pre{margin:0;background:var(--panel);border-radius:12px;padding:10px 0;overflow-x:auto}
+.seqv .ln{display:block;padding:2px 16px;cursor:pointer;white-space:pre}
+.seqv .ln.k{color:var(--blue);font-weight:600}
+.seqv .ln:hover,.seqv .ln.sel{background:color-mix(in srgb,var(--blue) 14%,transparent)}
+.explain{border:1px solid var(--line);border-radius:12px;padding:16px;align-self:start;position:sticky;top:72px}
+.conv{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:16px}
+.conv .box{background:var(--panel);border-radius:12px;padding:16px}
+.conv .out{font:600 20px "JetBrains Mono",monospace;margin-top:8px;overflow-wrap:anywhere}
+.check label{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.check input{width:22px;height:22px;min-height:0;flex:none;margin-top:3px;accent-color:var(--ok)}
+.quiz .q{margin-bottom:20px}
+.quiz .opts{display:grid;gap:6px;margin-top:6px}
+.quiz .opts button{text-align:left}
+.quiz .opts button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.quiz .opts button.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
+.quiz .fb{font-size:15px;color:var(--mute);margin-top:6px}
+.note{font-size:14px;color:var(--mute)}
+footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
+@media(max-width:900px){.lab{grid-template-columns:minmax(0,1fr)}.lab .side{order:2}.two,.cols,.seqv{grid-template-columns:minmax(0,1fr)}.explain{position:static}}
+@media(max-width:600px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:8px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute);font-size:12px}.fig{min-height:300px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="band">
+ <div class="wrap">
+  <h1>Pulseq 互動手冊</h1>
+  <p>從一個可以動手調的 2D GRE 序列開始：改參數，看時序圖、k-space 與程式碼一起變。下方再依章節學完安裝、核心概念、驗證、上機與重建。</p>
+ </div>
+</header>
+<nav aria-label="章節"><div class="wrap">
+ <a href="#lab">GRE 實驗室</a><a href="#intro">認識 Pulseq</a><a href="#install">安裝</a><a href="#core">核心概念</a><a href="#fid">FID</a><a href="#verify">驗證</a><a href="#seqfile">.seq 檔</a><a href="#scan">上機</a><a href="#recon">重建</a><a href="#debug">除錯</a><a href="#quiz">測驗</a><a href="#res">資源</a>
+</div></nav>
+
+<main>
+<section class="band" id="lab"><div class="wrap">
+ <h2>GRE 實驗室：一個 TR 長什麼樣</h2>
+ <div class="lab">
+  <div class="side">
+   <div class="ctrl">
+    <div class="presets" role="group" aria-label="預設">
+     <button data-p="std">標準 128²</button><button data-p="hi">高解析 256²</button><button data-p="fast">快速 TR 6 ms</button>
+    </div>
+    <form id="form"></form>
+    <button id="reset" type="button">還原預設</button>
+   </div>
+   <p class="note" style="margin-top:10px">計算方式仿照 Pulseq 的 makeTrapezoid 與官方 writeGradientEcho.m；RF 死時間 100 µs、ringdown 20 µs、ADC 死時間 10 µs、梯度柵格 10 µs。</p>
+  </div>
+  <div>
+   <div class="figs" id="figs"></div>
+   <div class="fig" id="seqfig" aria-label="GRE 時序圖"><svg id="seqsvg" role="img" aria-label="一個 TR 的 RF、梯度與 ADC 時序"></svg></div>
+   <div class="scrub">
+    <label for="line">相位編碼線</label>
+    <input type="range" id="line" min="1" max="128" value="40">
+    <span class="mono" id="lineval">40 / 128</span>
+    <button id="play" type="button">播放</button>
+   </div>
+   <div id="status" class="status"></div>
+  </div>
+ </div>
+ <div class="two">
+  <div>
+   <h3 style="margin-top:0">k-space 軌跡</h3>
+   <div class="fig ks"><svg id="kssvg" role="img" aria-label="目前 TR 的 k-space 軌跡"></svg></div>
+   <p class="note">時序圖各梯度軸分別縮放，方便看形狀；實際振幅請看「最大梯度」。斜線是預置梯度（Gx 與 Gy 同時作用），紅色實線是讀出，點是 ADC 取樣，最後的箭頭是 spoiler 把磁化推離。</p>
+  </div>
+  <div>
+   <h3 style="margin-top:0">對應的程式碼（隨參數更新）</h3>
+   <div class="code" data-gen="1"></div>
+  </div>
+ </div>
+</div></section>
+
+<section class="band lesson" id="intro"><div class="wrap cols">
+ <div>
+  <h2>Pulseq 把序列寫成一個檔案</h2>
+  <p>Pulseq 是開源、跨廠商的脈衝序列框架：你用 MATLAB/Octave 或 Python 描述序列，匯出成 <code>.seq</code> 文字檔，再由掃描儀上的直譯器執行。不必寫 IDEA 或 EPIC，同一個檔案也能丟進模擬器先看結果。框架以 MIT 授權開源，原始論文為 Layton et al., MRM 2017;77(4):1544–1552。</p>
+  <p>它的好處是快（改參數重跑腳本就能上機）、透明（每個 RF、梯度、ADC 都寫在檔案裡）、可分享（附在論文或 GitHub 就能重現）。</p>
+ </div>
+ <div>
+  <h3 style="margin-top:0">工作流程</h3>
+  <ol>
+   <li>設計：MATLAB 或 Python 腳本</li>
+   <li>檢查：checkTiming、plot、k-space、PNS；不通過就回到 1</li>
+   <li>匯出 <code>.seq</code></li>
+   <li>模擬（選用）：MRzero、KomaMRI、JEMRIS</li>
+   <li>上機：廠商直譯器執行</li>
+   <li>重建：從原始資料 reshape、iFFT 或 NUFFT</li>
+  </ol>
+ </div>
+</div></section>
+
+<section class="band lesson" id="install"><div class="wrap">
+ <h2>安裝：MATLAB 或 Python 擇一</h2>
+ <p>實驗室已有 MATLAB 就用 MATLAB 版（範例最完整、新功能最先支援）；否則用 PyPulseq。PyPulseq 目前穩定版為 v1.5.0，需要 Python 3.10 以上，尚未支援 Pulseq 1.5.1 的新功能。</p>
+ <div class="code" data-k="install"></div>
+ <p class="note">沒有本機環境時，可以在 Google Colab 執行 <code>!pip install pypulseq</code> 直接開始。</p>
+</div></section>
+
+<section class="band lesson" id="core"><div class="wrap">
+ <h2>核心概念：系統限制、事件、區塊</h2>
+ <p>序列是一串依序執行的區塊（block），每個區塊裡放同時開始的事件（event），所有事件依你宣告的系統限制來計算。上方實驗室圖中的虛線，就是五個區塊的邊界。</p>
+ <div class="cols">
+  <div>
+   <h3>事件</h3>
+   <div class="tbl"><table class="stack"><thead><tr><th>事件</th><th>MATLAB</th><th>用途</th></tr></thead><tbody id="evt"></tbody></table></div>
+  </div>
+  <div>
+   <h3>區塊規則</h3>
+   <ul>
+    <li><code>seq.addBlock(a, b, …)</code> 裡的事件同時開始；要晚一點就設事件的 <code>delay</code>。</li>
+    <li>區塊長度 = 最長的事件，用 <code>mr.calcDuration</code> 計算。</li>
+    <li>每軸一個梯度、一個 RF、一個 ADC；區塊不會重疊。</li>
+    <li>區塊結尾梯度不為零時，下一個區塊必須從同一值接上。</li>
+   </ul>
+   <h3>單位：Pulseq 內部用 Hz</h3>
+   <p>梯度 Hz/m、slew Hz/m/s、RF 振幅 Hz，都已乘上 γ = 42.576 MHz/T。好處是梯度對時間的積分直接就是 k（1/m），且 Δk = 1/FOV。</p>
+  </div>
+ </div>
+ <h3>單位換算器</h3>
+ <div class="conv">
+  <div class="box"><label for="gv">梯度強度</label><div class="row" style="display:flex;gap:8px;margin-top:6px"><input id="gv" type="number" value="28" step="any"><select id="gu" aria-label="梯度單位"><option>mT/m</option><option>Hz/m</option><option>G/cm</option></select></div><div class="out" id="gout"></div></div>
+  <div class="box"><label for="sv">轉換率</label><div class="row" style="display:flex;gap:8px;margin-top:6px"><input id="sv" type="number" value="150" step="any"><select id="su" aria-label="轉換率單位"><option>T/m/s</option><option>Hz/m/s</option></select></div><div class="out" id="sout"></div></div>
+  <div class="box"><label for="kf">FOV（mm）與矩陣</label><div class="row" style="display:flex;gap:8px;margin-top:6px"><input id="kf" type="number" value="256" step="any" aria-label="FOV mm"><input id="kn" type="number" value="256" step="1" aria-label="矩陣大小"></div><div class="out" id="kout"></div></div>
+ </div>
+</div></section>
+
+<section class="band lesson" id="fid"><div class="wrap">
+ <h2>第一個序列：FID</h2>
+ <p>一個 90° 硬脈衝、一段 ADC、一段等待。沒有梯度，最適合拿來確認「安裝 → 匯出 → 上機」整條路是通的。注意 <code>calcDuration(rf)</code> 已包含死時間與 ringdown；時間用秒、角度用弧度。</p>
+ <div class="code" data-k="fid"></div>
+ <p><b>練習：</b>翻轉角改成 30°、TR 改成 500 ms，重新匯出並用 <code>seq.plot()</code> 確認。然後回到上方實驗室，試著把 TE 調到低於最短 TE，看會出現什麼錯誤。</p>
+</div></section>
+
+<section class="band lesson" id="verify"><div class="wrap">
+ <h2>驗證：上機前的五項檢查</h2>
+ <p>電腦上檢查只要幾秒，機器上失敗會浪費掃描時段。PNS 估計需要廠商提供的硬體描述檔（Siemens 為 .asc）。</p>
+ <div class="tbl"><table class="stack"><thead><tr><th>檢查</th><th>MATLAB</th><th>Python</th><th>看什麼</th></tr></thead><tbody id="ver"></tbody></table></div>
+ <h3>上機前清單 <span class="note" id="ckcount"></span></h3>
+ <div class="check" id="check"></div>
+</div></section>
+
+<section class="band lesson" id="seqfile"><div class="wrap">
+ <h2>讀懂 .seq 檔：點一行看說明</h2>
+ <p>重複的事件只存一次、以編號引用，所以幾千個 TR 也很小。以下是依第 5 章 GRE 簡化的範例，數字僅示意；完整規格見 Pulseq 網站的 specification.pdf。</p>
+ <div class="seqv">
+  <pre class="mono" id="seqlines"></pre>
+  <div class="explain" id="seqexp" aria-live="polite"></div>
+ </div>
+</div></section>
+
+<section class="band lesson" id="scan"><div class="wrap cols">
+ <div>
+  <h2>上機：先有直譯器，再有安全</h2>
+  <p>直譯器需先與廠商簽研究合作協議再取得，請與機器管理者一起處理。</p>
+  <div class="tbl"><table class="stack"><thead><tr><th>平台</th><th>備註</th></tr></thead><tbody>
+   <tr><td>Siemens</td><td>官方直譯器 v1.5.2（2026 年 2 月）；v1.5.2p1（4 月）為純修正版，改善 table undocked 當機</td></tr>
+   <tr><td>GE</td><td>TOPPE / Pulseq on GE，先把 .seq 轉成 GE 可執行格式</td></tr>
+   <tr><td>Philips</td><td>兩個直譯器發表於 ISMRM 2024，需向作者索取</td></tr>
+   <tr><td>United Imaging</td><td>有支援，向廠商洽詢</td></tr>
+   <tr><td>OCRA、FLOCRA</td><td>開源低場平台，適合教學</td></tr>
+   <tr><td>Bruker</td><td>舊版直譯器已停止維護</td></tr>
+  </tbody></table></div>
+ </div>
+ <div>
+  <h3 style="margin-top:0">安全事項</h3>
+  <ul>
+   <li><b>你對序列安全負責。</b>能寫出廠商介面不允許的波形，不代表它安全。</li>
+   <li><b>SAR：</b>高翻轉角、短 TR、多個重聚相脈衝會提高 SAR；掃描儀仍會監控，但要事前估算。</li>
+   <li><b>PNS 與機械共振：</b>用 calcPNS 估計，並檢查梯度頻譜是否落在禁區頻率。</li>
+   <li><b>人體掃描</b>需 IRB 核准並依機構 MR 安全規範。</li>
+   <li><b>新序列一律先掃假體。</b></li>
+  </ul>
+  <h3>Siemens 典型步驟</h3>
+  <ol><li>確認直譯器版本與 .seq 格式相容</li><li>把 .seq 複製到直譯器指定資料夾</li><li>介面載入 Pulseq 序列並選檔；介面上 TR/TE 欄位通常不反映實際參數</li><li>先掃假體，取回 TWIX .dat 確認重建</li></ol>
+ </div>
+</div></section>
+
+<section class="band lesson" id="recon"><div class="wrap">
+ <h2>重建：資料順序就是你的迴圈順序</h2>
+ <p>原始資料是每個 ADC 依執行順序排成一列；照同樣順序 reshape 即可。序列一複雜（多層、多回波、平均），就加上標籤（label），寫入計數器 LIN、PAR、SLC、ECO、AVG、REP，重建時不必猜。非笛卡兒軌跡用 <code>calculateKspacePP</code> 取得座標，交給 NUFFT（BART、SigPy、MIRT）。</p>
+ <div class="code" data-k="recon"></div>
+</div></section>
+
+<section class="band lesson" id="debug"><div class="wrap">
+ <h2>除錯：搜尋你看到的症狀</h2>
+ <p>初學者的錯誤幾乎都來自三件事：時間沒對齊柵格、延遲算成負值、單位搞混。</p>
+ <label for="errq">搜尋</label>
+ <input id="errq" type="search" placeholder="例如：raster、偏移、條紋" style="max-width:420px;display:block;margin:6px 0 12px">
+ <div class="tbl"><table class="stack"><thead><tr><th>症狀</th><th>可能原因</th><th>解決方式</th></tr></thead><tbody id="errs"></tbody></table></div>
+ <p class="note" id="errempty" hidden>沒有符合的項目，換個關鍵字試試。</p>
+</div></section>
+
+<section class="band lesson quiz" id="quiz"><div class="wrap">
+ <h2>小測驗 <span class="note" id="score"></span></h2>
+ <div id="qs"></div>
+ <button id="qreset" type="button">重新作答</button>
+</div></section>
+
+<section class="band lesson" id="res"><div class="wrap cols">
+ <div>
+  <h2>四週學習路線</h2>
+  <ol>
+   <li><b>第 1 週：</b>安裝、FID、系統限制與區塊</li>
+   <li><b>第 2 週：</b>2D GRE，自己算 TE/TR 延遲並畫 k-space</li>
+   <li><b>第 3 週：</b>多層 GRE、加標籤、用模擬器重建</li>
+   <li><b>第 4 週：</b>假體上機，走完設計 → 掃描 → 重建</li>
+   <li><b>進階：</b>官方範例的 SE、TSE、EPI、螺旋、UTE</li>
+  </ol>
+ </div>
+ <div>
+  <h2>資源</h2>
+  <ul>
+   <li><a href="https://pulseq.github.io/">Pulseq 官方網站</a>：文件、範例、規格書</li>
+   <li><a href="https://pulseq.github.io/news.html">Pulseq 最新消息</a>：直譯器發布、課程、使用者聚會</li>
+   <li><a href="https://github.com/pulseq/pulseq">Pulseq MATLAB 原始碼</a>：matlab/demoSeq/ 是最好的教材</li>
+   <li><a href="https://github.com/imr-framework/pypulseq">PyPulseq</a>：Python 版與 examples/</li>
+   <li><a href="https://pypi.org/project/pypulseq/">PyPulseq on PyPI</a></li>
+  </ul>
+ </div>
+</div></section>
+</main>
+<footer class="band"><div class="wrap">版本資訊以 2026 年 11 月為準。系統限制數值為 Siemens 機型的典型值，請向你的機器管理者確認實際規格。</div></footer>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const GAM=42.576e6,R=10e-6,RFDEAD=100e-6,RING=20e-6,ADCDEAD=10e-6;
+const ceilR=t=>Math.ceil(t/R-1e-6)*R;
+const ms=t=>(t*1e3).toFixed(2);
+
+const FIELDS=[['fov','FOV','mm'],['nx','Nx 讀出點數',''],['ny','Ny 相位編碼數',''],['thk','切片厚度','mm'],['fa','翻轉角','°'],['te','TE','ms'],['tr','TR','ms'],['ro','讀出時間','ms'],['rfdur','RF 長度','ms'],['tbw','時間頻寬積',''],['pre','預置梯度時間','ms'],['gmax','MaxGrad','mT/m'],['smax','MaxSlew','T/m/s']];
+const PRE={std:{fov:256,nx:128,ny:128,thk:3,fa:10,te:5,tr:12,ro:3.2,rfdur:3,tbw:4,pre:1,gmax:28,smax:150},hi:{fov:256,nx:256,ny:256,thk:3,fa:10,te:6,tr:15,ro:5.12,rfdur:3,tbw:4,pre:1.2,gmax:28,smax:150},fast:{fov:220,nx:96,ny:96,thk:5,fa:15,te:3,tr:6,ro:1.92,rfdur:1,tbw:2.7,pre:0.6,gmax:40,smax:180}};
+let P=Object.assign({},PRE.std,store.get('pq-lab',{}));
+let line=40,timer=null,RES=null,genLang='m';
+
+$('#form').innerHTML=FIELDS.map(([k,l,u])=>`<div class="row"><label for="f-${k}">${l} <small>${u}</small></label><input id="f-${k}" name="${k}" type="number" step="any" inputmode="decimal"></div>`).join('');
+const fill=()=>{for(const [k] of FIELDS)$('#f-'+k).value=P[k]};
+
+function calc(p){
+ const err=[],warn=[];
+ const maxG=p.gmax*1e-3*GAM,maxS=p.smax*GAM;
+ const trapAD=(A,dur)=>{const a=Math.abs(A),dC=1/maxS,disc=dur*dur-4*a*dC;if(disc<0)return null;let amp=(dur-Math.sqrt(disc))/(2*dC);const rise=Math.max(R,ceilR(amp/maxS)),flat=dur-2*rise;if(flat<-1e-9)return null;amp=a/(rise+flat);if(amp>maxG*1.0001)return null;return{amp:Math.sign(A)*amp,rise,flat,dur}};
+ const trapA=A=>{const a=Math.abs(A);let rise=Math.max(R,ceilR(Math.sqrt(a/maxS))),amp=a/rise,flat=0;if(amp>maxG){const tE=ceilR(a/maxG);amp=a/tE;rise=Math.max(R,ceilR(amp/maxS));flat=Math.max(0,tE-rise);amp=a/(rise+flat)}return{amp:Math.sign(A)*amp,rise,flat,dur:2*rise+flat}};
+ const d=p.rfdur*1e-3,bw=p.tbw/d,gzAmp=bw/(p.thk*1e-3);
+ if(gzAmp>maxG)err.push(`選層梯度 ${(gzAmp/GAM*1e3).toFixed(1)} mT/m 超過 MaxGrad：加厚切片、加長 RF 或降低時間頻寬積`);
+ const gzRise=Math.max(R,ceilR(gzAmp/maxS)),rfDelay=Math.max(RFDEAD,gzRise),gzDelay=rfDelay-gzRise;
+ const gzArea=gzAmp*(d+gzRise),gzDur=ceilR(Math.max(rfDelay+d+RING,gzDelay+2*gzRise+d));
+ const dk=1/(p.fov*1e-3),roT=ceilR(p.ro*1e-3);
+ if(Math.abs(roT-p.ro*1e-3)>1e-9)warn.push(`讀出時間不是 10 µs 的整數倍，已進位為 ${ms(roT)} ms`);
+ const gxAmp=p.nx*dk/roT;if(gxAmp>maxG)err.push(`讀出梯度 ${(gxAmp/GAM*1e3).toFixed(1)} mT/m 超過 MaxGrad：加長讀出時間或加大 FOV`);
+ const gxRise=Math.max(R,ceilR(gxAmp/maxS)),gxArea=gxAmp*(roT+gxRise),gxDur=2*gxRise+roT;
+ const dwell=roT/p.nx,dn=dwell/100e-9;
+ if(Math.abs(dn-Math.round(dn))>1e-6)warn.push(`dwell ${(dwell*1e6).toFixed(4)} µs 不是 ADC 柵格 100 ns 的整數倍，會被進位，回波中心可能偏移`);
+ const pre=ceilR(p.pre*1e-3),pyMax=p.ny/2*dk;
+ const gxPre=trapAD(-gxArea/2,pre),gzReph=trapAD(-gzArea/2,pre),gyMax=trapAD(pyMax,pre);
+ if(!gxPre||!gzReph||!gyMax)err.push('預置梯度時間太短，面積放不下：加長「預置梯度時間」或提高 MaxSlew/MaxGrad');
+ const gxSp=trapA(2*p.nx*dk),gzSp=trapA(4/(p.thk*1e-3));
+ const spDur=Math.max(gxSp.dur,gzSp.dur,pre);
+ const teCore=pre+gzRise+d/2+gxDur/2,minTE=ceilR(teCore);
+ let dTE=ceilR(p.te*1e-3-teCore);
+ if(dTE<-1e-9)err.push(`TE ${p.te} ms 低於最短 TE ${ms(minTE)} ms`);
+ dTE=Math.max(0,dTE);
+ const fixed=gzDur+pre+gxDur+dTE,minTR=fixed+spDur;
+ let dTR=ceilR(p.tr*1e-3-fixed);
+ if(dTR<spDur-1e-9)err.push(`TR ${p.tr} ms 低於最短 TR ${ms(minTR)} ms（spoiler 需要 ${ms(spDur)} ms）`);
+ const b5=Math.max(dTR,spDur),TR=fixed+b5;
+ const peak=Math.max(gzAmp,gxAmp,gxPre?Math.abs(gxPre.amp):0,gzReph?Math.abs(gzReph.amp):0,gyMax?gyMax.amp:0,gxSp.amp,gzSp.amp);
+ return{err,warn,d,gzAmp,gzRise,rfDelay,gzDelay,gzArea,gzDur,dk,roT,gxAmp,gxRise,gxArea,gxDur,dwell,pre,gxPre,gzReph,gyMax,pyMax,gxSp,gzSp,spDur,dTE,b5,TR,minTE,minTR,peak,maxG,
+  t:[0,gzDur,gzDur+pre,gzDur+pre+dTE,gzDur+pre+dTE+gxDur]};
+}
+
+function figs(r){
+ const it=[[ms(r.minTE)+' ms','最短 TE'],[ms(r.minTR)+' ms','最短 TR'],[fmtTime(r.TR*P.ny),'掃描時間'],[(P.fov/P.nx).toFixed(2)+' mm','平面解析度'],[Math.round(1/r.roT)+' Hz','每像素頻寬'],[(r.peak/GAM*1e3).toFixed(1)+' mT/m','最大梯度']];
+ $('#figs').innerHTML=it.map(([v,l])=>`<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('');
+}
+function fmtTime(s){return s<60?s.toFixed(2)+' s':Math.floor(s/60)+' min '+(s%60).toFixed(0)+' s'}
+
+function status(r){
+ const s=$('#status');
+ if(r.err.length){s.className='status bad';s.innerHTML='<b>checkTiming 會失敗</b><ul>'+r.err.map(e=>'<li>'+esc(e)+'</li>').join('')+'</ul>'}
+ else if(r.warn.length){s.className='status warn';s.innerHTML='<b>可以執行，但請注意</b><ul>'+r.warn.map(e=>'<li>'+esc(e)+'</li>').join('')+'</ul>'}
+ else{s.className='status';s.innerHTML=`<b>時序可行。</b>TE 延遲 ${ms(r.dTE)} ms、TR 區塊 5 長 ${ms(r.b5)} ms，實際 TR ${ms(r.TR)} ms。`}
+}
+
+const sv=$('#seqsvg'),ks=$('#kssvg');
+function drawSeq(){
+ const r=RES;if(!r)return;
+ const W=sv.clientWidth,H=sv.clientHeight,narrow=W<520;
+ const L=narrow?54:84,Rm=14,T0=30,B=44,lanes=['RF','Gz 選層','Gy 相位','Gx 讀出','ADC'];
+ const lh=(H-T0-B)/lanes.length,X=t=>L+t/r.TR*(W-L-Rm),Yc=i=>T0+lh*(i+.5);
+ const lm=[0,Math.max(r.gzAmp,r.gzReph?Math.abs(r.gzReph.amp):0),Math.max(r.gyMax?r.gyMax.amp:1,1),Math.max(r.gxAmp,r.gxPre?Math.abs(r.gxPre.amp):0)];
+ const ink='var(--ink)',mute='var(--mute)',red='var(--red)',blue='var(--blue)',ln='var(--line)';
+ let o='';
+ lanes.forEach((n,i)=>{o+=`<line x1="${L}" x2="${W-Rm}" y1="${Yc(i)}" y2="${Yc(i)}" stroke="${ln}"/><text x="${L-8}" y="${Yc(i)+5}" text-anchor="end" font-size="${narrow?12:14}" fill="${ink}" font-weight="500">${narrow?n.split(' ')[0]:n}</text>`});
+ r.t.concat([r.TR]).forEach((t,i)=>{o+=`<line x1="${X(t)}" x2="${X(t)}" y1="${T0-6}" y2="${H-B+4}" stroke="${mute}" stroke-dasharray="3 4" stroke-width="1"/>`;if(i<5){const mid=(X(t)+X(i<4?r.t[i+1]:r.TR))/2;o+=`<text x="${mid}" y="${T0-12}" text-anchor="middle" font-size="12" fill="${mute}">${narrow?'':'區塊 '}${i+1}</text>`}});
+ const trap=(lane,t0,amp,rise,flat,col,op=.22,sw=1.5)=>{const y=Yc(lane),f=Math.max(-1.15,Math.min(1.15,amp/lm[lane])),h=-f*lh*.4;return `<path d="M${X(t0)} ${y}L${X(t0+rise)} ${y+h}L${X(t0+rise+flat)} ${y+h}L${X(t0+2*rise+flat)} ${y}Z" fill="${col}" fill-opacity="${op}" stroke="${col}" stroke-width="${sw}"/>`};
+ // RF sinc
+ const rs=r.rfDelay,N=160,hRF=lh*.42;let pth='';
+ for(let k=0;k<=N;k++){const x=k/N-.5,u=P.tbw*x,sn=Math.abs(u)<1e-9?1:Math.sin(Math.PI*u)/(Math.PI*u),w=.58+.42*Math.cos(2*Math.PI*x);pth+=(k?'L':'M')+X(rs+(k/N)*r.d)+' '+(Yc(0)-sn*w*hRF)}
+ o+=`<path d="${pth}" fill="none" stroke="${red}" stroke-width="2"/><text x="${X(rs+r.d)+8}" y="${Yc(0)-hRF*.5}" font-size="12" fill="${red}">${P.fa}°</text>`;
+ // Gz
+ o+=trap(1,r.gzDelay,r.gzAmp,r.gzRise,r.d,blue);
+ if(r.gzReph)o+=trap(1,r.t[1],r.gzReph.amp,r.gzReph.rise,r.gzReph.flat,blue);
+ o+=trap(1,r.t[4],r.gzSp.amp,r.gzSp.rise,r.gzSp.flat,blue,.12);
+ // Gy ghosts + current
+ if(r.gyMax){for(let k=-4;k<=4;k++){const a=r.gyMax.amp*k/4;o+=trap(2,r.t[1],a,r.gyMax.rise,r.gyMax.flat,mute,0,.6);o+=trap(2,r.t[4],-a,r.gyMax.rise,r.gyMax.flat,mute,0,.6)}
+  const f=(line-1-P.ny/2)/(P.ny/2),a=r.gyMax.amp*f;o+=trap(2,r.t[1],a,r.gyMax.rise,r.gyMax.flat,red,.25,2)+trap(2,r.t[4],-a,r.gyMax.rise,r.gyMax.flat,red,.25,2)}
+ // Gx
+ if(r.gxPre)o+=trap(3,r.t[1],r.gxPre.amp,r.gxPre.rise,r.gxPre.flat,blue);
+ o+=trap(3,r.t[3],r.gxAmp,r.gxRise,r.roT,blue);
+ o+=trap(3,r.t[4],r.gxSp.amp,r.gxSp.rise,r.gxSp.flat,blue,.12);
+ if(!narrow)o+=`<text x="${X(r.t[4]+r.gxSp.dur)+6}" y="${Yc(3)-4}" font-size="12" fill="${mute}">spoiler（縮小顯示）</text>`;
+ // ADC
+ const a0=r.t[3]+r.gxRise,yA=Yc(4);
+ o+=`<rect x="${X(a0)}" y="${yA-lh*.22}" width="${X(a0+r.roT)-X(a0)}" height="${lh*.44}" fill="${ink}" fill-opacity=".1" stroke="${ink}" stroke-width="1.5"/>`;
+ // TE bracket
+ const tc=rs+r.d/2,te=a0+r.roT/2,yb=H-B+22;
+ o+=`<line x1="${X(tc)}" x2="${X(tc)}" y1="${Yc(0)}" y2="${yb}" stroke="${red}" stroke-width="1" stroke-dasharray="2 3"/><line x1="${X(te)}" x2="${X(te)}" y1="${yA}" y2="${yb}" stroke="${red}" stroke-width="1" stroke-dasharray="2 3"/><line x1="${X(tc)}" x2="${X(te)}" y1="${yb}" y2="${yb}" stroke="${red}" stroke-width="2"/><text x="${(X(tc)+X(te))/2}" y="${yb-6}" text-anchor="middle" font-size="13" fill="${red}" font-weight="700">TE ${ms(te-tc)} ms</text>`;
+ o+=`<text x="${W-Rm}" y="${H-6}" text-anchor="end" font-size="12" fill="${mute}">TR ${ms(r.TR)} ms</text><text x="${L}" y="${H-6}" font-size="12" fill="${mute}">0</text>`;
+ sv.innerHTML=o;
+}
+
+function drawK(){
+ const r=RES;if(!r)return;
+ const W=ks.clientWidth,H=ks.clientHeight,m=26,S=Math.min(W,H)-2*m,cx=W/2,cy=H/2;
+ const kx=r.gxArea/2*1.3,ky=r.pyMax*1.2,X=k=>cx+k/kx*S/2,Y=k=>cy-k/ky*S/2;
+ const mute='var(--mute)',red='var(--red)',ln='var(--line)';
+ let o=`<defs><marker id="ka" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${red}"/></marker></defs>`;
+ o+=`<line x1="${cx-S/2}" x2="${cx+S/2}" y1="${cy}" y2="${cy}" stroke="${mute}"/><line x1="${cx}" x2="${cx}" y1="${cy-S/2}" y2="${cy+S/2}" stroke="${mute}"/>`;
+ const step=Math.max(1,Math.ceil(P.ny/48)),xa=P.nx*r.dk/2;
+ for(let j=0;j<P.ny;j+=step){const k=(j-P.ny/2)*r.dk;o+=`<line x1="${X(-xa)}" x2="${X(xa)}" y1="${Y(k)}" y2="${Y(k)}" stroke="${ln}"/>`}
+ const kyc=(line-1-P.ny/2)*r.dk,xs=r.gxArea/2;
+ o+=`<path d="M${X(0)} ${Y(0)}L${X(-xs)} ${Y(kyc)}" fill="none" stroke="${red}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+ o+=`<path d="M${X(-xs)} ${Y(kyc)}L${X(xs)} ${Y(kyc)}" fill="none" stroke="${red}" stroke-width="2.5"/>`;
+ const ns=Math.min(P.nx,40);for(let s=0;s<ns;s++){const k=-xa+(s+.5)*2*xa/ns;o+=`<circle cx="${X(k)}" cy="${Y(kyc)}" r="2.2" fill="${red}"/>`}
+ o+=`<path d="M${X(xs)} ${Y(kyc)}L${X(kx*.98)} ${Y(kyc*.25)}" fill="none" stroke="${red}" stroke-width="1.5" marker-end="url(#ka)"/>`;
+ o+=`<text x="${cx+S/2}" y="${cy-6}" text-anchor="end" font-size="12" fill="${mute}">kx</text><text x="${cx+6}" y="${cy-S/2+12}" font-size="12" fill="${mute}">ky</text><text x="${m}" y="${H-6}" font-size="12" fill="${mute}">ky = ${kyc.toFixed(1)} 1/m</text>`;
+ ks.innerHTML=o;
+}
+
+function genCode(p){
+ const m=`sys = mr.opts('MaxGrad', ${p.gmax}, 'GradUnit', 'mT/m', 'MaxSlew', ${p.smax}, 'SlewUnit', 'T/m/s', ...
+    'rfRingdownTime', 20e-6, 'rfDeadTime', 100e-6, 'adcDeadTime', 10e-6);
+seq = mr.Sequence(sys);
+fov = ${p.fov}e-3; Nx = ${p.nx}; Ny = ${p.ny}; sliceThickness = ${p.thk}e-3;
+alpha = ${p.fa}; TE = ${p.te}e-3; TR = ${p.tr}e-3; roDuration = ${p.ro}e-3;
+
+[rf, gz] = mr.makeSincPulse(alpha*pi/180, 'Duration', ${p.rfdur}e-3, 'SliceThickness', sliceThickness, ...
+    'apodization', 0.42, 'timeBwProduct', ${p.tbw}, 'system', sys);
+deltak = 1/fov;
+gx = mr.makeTrapezoid('x', 'FlatArea', Nx*deltak, 'FlatTime', roDuration, 'system', sys);
+adc = mr.makeAdc(Nx, 'Duration', gx.flatTime, 'Delay', gx.riseTime, 'system', sys);
+gxPre  = mr.makeTrapezoid('x', 'Area', -gx.area/2, 'Duration', ${p.pre}e-3, 'system', sys);
+gzReph = mr.makeTrapezoid('z', 'Area', -gz.area/2, 'Duration', ${p.pre}e-3, 'system', sys);
+phaseAreas = ((0:Ny-1) - Ny/2) * deltak;
+gxSpoil = mr.makeTrapezoid('x', 'Area', 2*Nx*deltak, 'system', sys);
+gzSpoil = mr.makeTrapezoid('z', 'Area', 4/sliceThickness, 'system', sys);
+
+delayTE = ceil((TE - mr.calcDuration(gxPre) - gz.fallTime - gz.flatTime/2 ...
+    - mr.calcDuration(gx)/2) / sys.gradRasterTime) * sys.gradRasterTime;
+delayTR = ceil((TR - mr.calcDuration(gz) - mr.calcDuration(gxPre) ...
+    - mr.calcDuration(gx) - delayTE) / sys.gradRasterTime) * sys.gradRasterTime;
+
+rf_phase = 0; rf_inc = 0;
+for i = 1:Ny
+    rf.phaseOffset = rf_phase/180*pi;  adc.phaseOffset = rf_phase/180*pi;
+    rf_inc = mod(rf_inc + 117, 360);   rf_phase = mod(rf_phase + rf_inc, 360);
+    seq.addBlock(rf, gz);                                          % 區塊 1
+    gyPre = mr.makeTrapezoid('y', 'Area', phaseAreas(i), ...
+        'Duration', mr.calcDuration(gxPre), 'system', sys);
+    seq.addBlock(gxPre, gyPre, gzReph);                            % 區塊 2
+    seq.addBlock(mr.makeDelay(delayTE));                           % 區塊 3
+    seq.addBlock(gx, adc, mr.makeLabel('SET', 'LIN', i-1));        % 區塊 4
+    gyPre.amplitude = -gyPre.amplitude;
+    seq.addBlock(mr.makeDelay(delayTR), gxSpoil, gyPre, gzSpoil);  % 區塊 5
+end
+
+[ok, err] = seq.checkTiming;
+seq.setDefinition('FOV', [fov fov sliceThickness]);
+seq.setDefinition('Name', 'gre');
+seq.write('gre.seq');`;
+ const py=`import numpy as np
+import pypulseq as pp
+
+sys = pp.Opts(max_grad=${p.gmax}, grad_unit='mT/m', max_slew=${p.smax}, slew_unit='T/m/s',
+              rf_ringdown_time=20e-6, rf_dead_time=100e-6, adc_dead_time=10e-6)
+seq = pp.Sequence(system=sys)
+fov, Nx, Ny, thk = ${p.fov}e-3, ${p.nx}, ${p.ny}, ${p.thk}e-3
+alpha, TE, TR, ro_dur = ${p.fa}, ${p.te}e-3, ${p.tr}e-3, ${p.ro}e-3
+R = sys.grad_raster_time
+
+rf, gz, _ = pp.make_sinc_pulse(flip_angle=alpha*np.pi/180, duration=${p.rfdur}e-3,
+    slice_thickness=thk, apodization=0.42, time_bw_product=${p.tbw},
+    system=sys, return_gz=True)
+deltak = 1/fov
+gx = pp.make_trapezoid(channel='x', flat_area=Nx*deltak, flat_time=ro_dur, system=sys)
+adc = pp.make_adc(num_samples=Nx, duration=gx.flat_time, delay=gx.rise_time, system=sys)
+gx_pre  = pp.make_trapezoid(channel='x', area=-gx.area/2, duration=${p.pre}e-3, system=sys)
+gz_reph = pp.make_trapezoid(channel='z', area=-gz.area/2, duration=${p.pre}e-3, system=sys)
+phase_areas = (np.arange(Ny) - Ny/2) * deltak
+gx_spoil = pp.make_trapezoid(channel='x', area=2*Nx*deltak, system=sys)
+gz_spoil = pp.make_trapezoid(channel='z', area=4/thk, system=sys)
+
+delay_te = np.ceil((TE - pp.calc_duration(gx_pre) - gz.fall_time - gz.flat_time/2
+                    - pp.calc_duration(gx)/2) / R) * R
+delay_tr = np.ceil((TR - pp.calc_duration(gz) - pp.calc_duration(gx_pre)
+                    - pp.calc_duration(gx) - delay_te) / R) * R
+
+rf_phase, rf_inc = 0, 0
+for i in range(Ny):
+    rf.phase_offset = rf_phase/180*np.pi
+    adc.phase_offset = rf_phase/180*np.pi
+    rf_inc = (rf_inc + 117) % 360
+    rf_phase = (rf_phase + rf_inc) % 360
+    seq.add_block(rf, gz)
+    gy_pre = pp.make_trapezoid(channel='y', area=phase_areas[i],
+                               duration=pp.calc_duration(gx_pre), system=sys)
+    seq.add_block(gx_pre, gy_pre, gz_reph)
+    seq.add_block(pp.make_delay(delay_te))
+    seq.add_block(gx, adc, pp.make_label(type='SET', label='LIN', value=i))
+    gy_pre.amplitude = -gy_pre.amplitude
+    seq.add_block(pp.make_delay(delay_tr), gx_spoil, gy_pre, gz_spoil)
+
+ok, err = seq.check_timing()
+seq.set_definition('FOV', [fov, fov, thk])
+seq.set_definition('Name', 'gre')
+seq.write('gre.seq')`;
+ return{m,p:py};
+}
+
+const CODE={
+ install:{m:`% 1. 下載原始碼
+%    git clone https://github.com/pulseq/pulseq.git
+% 2. 加入路徑並保存
+addpath(genpath('你的路徑/pulseq/matlab'));
+savepath;
+% 3. 測試：沒有錯誤就代表成功
+seq = mr.Sequence();
+% 4. 範例在 matlab/demoSeq/，先打開 writeGradientEcho.m`,p:`# 建議先建立虛擬環境
+python -m venv pulseq-env
+source pulseq-env/bin/activate      # Windows: pulseq-env\\Scripts\\activate
+
+pip install pypulseq                 # 穩定版
+pip install "pypulseq[sigpy]"        # 需要 SigPy 設計 SLR 脈衝時
+# 或 conda install conda-forge::pypulseq
+
+python -c "import pypulseq as pp; print(pp.Sequence())"`},
+ fid:{m:`sys = mr.opts('MaxGrad', 28, 'GradUnit', 'mT/m', 'MaxSlew', 150, 'SlewUnit', 'T/m/s', ...
+              'rfRingdownTime', 20e-6, 'rfDeadTime', 100e-6, 'adcDeadTime', 10e-6);
+seq = mr.Sequence(sys);
+
+Nx = 4096; adcDur = 256e-3;   % dwell = 62.5 µs
+rfDur = 500e-6; TR = 1; Nrep = 4;
+
+rf  = mr.makeBlockPulse(pi/2, 'Duration', rfDur, 'system', sys);
+adc = mr.makeAdc(Nx, 'Duration', adcDur, 'Delay', sys.adcDeadTime, 'system', sys);
+delayTR = TR - mr.calcDuration(rf) - mr.calcDuration(adc);
+
+for i = 1:Nrep
+    seq.addBlock(rf);
+    seq.addBlock(adc);
+    seq.addBlock(mr.makeDelay(delayTR));
+end
+
+[ok, err] = seq.checkTiming;
+seq.plot();
+seq.setDefinition('Name', 'fid');
+seq.write('fid.seq');`,p:`import numpy as np
+import pypulseq as pp
+
+sys = pp.Opts(max_grad=28, grad_unit='mT/m', max_slew=150, slew_unit='T/m/s',
+              rf_ringdown_time=20e-6, rf_dead_time=100e-6, adc_dead_time=10e-6)
+seq = pp.Sequence(system=sys)
+
+Nx, adc_dur, rf_dur, TR, Nrep = 4096, 256e-3, 500e-6, 1.0, 4
+
+rf  = pp.make_block_pulse(flip_angle=np.pi/2, duration=rf_dur, system=sys)
+adc = pp.make_adc(num_samples=Nx, duration=adc_dur, delay=sys.adc_dead_time, system=sys)
+delay_tr = TR - pp.calc_duration(rf) - pp.calc_duration(adc)
+
+for _ in range(Nrep):
+    seq.add_block(rf)
+    seq.add_block(adc)
+    seq.add_block(pp.make_delay(delay_tr))
+
+ok, err = seq.check_timing()
+seq.plot()
+seq.set_definition('Name', 'fid')
+seq.write('fid.seq')`},
+ recon:{m:`twix = mapVBVD('meas_xxx.dat');          % 讀 Siemens 原始資料
+if iscell(twix), twix = twix{end}; end
+raw = twix.image.unsorted();              % [Nx, Ncoil, Nadc]
+raw = permute(raw, [1 3 2]);              % [Nx, Ny, Ncoil]
+img = fftshift(ifft2(ifftshift(raw)));    % 每個線圈 2D iFFT
+sos = sqrt(sum(abs(img).^2, 3));          % 平方和合併線圈
+imagesc(sos.'); axis image; colormap gray;`,p:`import numpy as np
+import twixtools
+
+scans = twixtools.read_twix('meas_xxx.dat')
+mdbs = [m for m in scans[-1]['mdb'] if m.is_image_scan()]
+raw = np.stack([m.data for m in mdbs])     # [Nadc, Ncoil, Nx]
+raw = raw.transpose(2, 0, 1)               # [Nx, Ny, Ncoil]
+img = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(raw, axes=(0, 1)), axes=(0, 1)), axes=(0, 1))
+sos = np.sqrt((np.abs(img)**2).sum(axis=2))`}
+};
+
+function mountCode(el,get){
+ let lang=el.dataset.gen?genLang:'m';
+ el.innerHTML='<div class="bar"><button type="button" data-l="m">MATLAB</button><button type="button" data-l="p">Python</button><button type="button" class="cp">複製</button></div><pre class="mono"><code></code></pre>';
+ const show=()=>{el.querySelector('code').textContent=get()[lang];el.querySelectorAll('[data-l]').forEach(b=>{b.classList.toggle('on',b.dataset.l===lang);b.setAttribute('aria-pressed',b.dataset.l===lang)})};
+ el.querySelectorAll('[data-l]').forEach(b=>b.addEventListener('click',()=>{lang=b.dataset.l;if(el.dataset.gen)genLang=lang;show()}));
+ const cp=el.querySelector('.cp');
+ cp.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(get()[lang]);cp.textContent='已複製'}catch(e){cp.textContent='請手動選取'}setTimeout(()=>cp.textContent='複製',1600)});
+ el._show=show;show();
+}
+document.querySelectorAll('.code[data-k]').forEach(el=>mountCode(el,()=>CODE[el.dataset.k]));
+const genEl=document.querySelector('.code[data-gen]');
+mountCode(genEl,()=>genCode(P));
+
+function update(){
+ RES=calc(P);
+ const lr=$('#line');lr.max=P.ny;if(line>P.ny)line=P.ny;lr.value=line;
+ $('#lineval').textContent=line+' / '+P.ny;
+ figs(RES);status(RES);drawSeq();drawK();genEl._show();
+ store.set('pq-lab',P);
+}
+$('#form').addEventListener('input',e=>{const k=e.target.name,v=parseFloat(e.target.value);if(!k||!isFinite(v)||v<=0)return;P[k]=(k==='nx'||k==='ny')?Math.max(2,Math.round(v/2)*2):v;update()});
+$('#form').addEventListener('submit',e=>e.preventDefault());
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{P=Object.assign({},PRE[b.dataset.p]);line=Math.round(P.ny*0.3);fill();update()}));
+$('#reset').addEventListener('click',()=>{P=Object.assign({},PRE.std);line=40;fill();update()});
+$('#line').addEventListener('input',e=>{line=+e.target.value;$('#lineval').textContent=line+' / '+P.ny;drawSeq();drawK()});
+$('#play').addEventListener('click',()=>{const b=$('#play');if(timer){clearInterval(timer);timer=null;b.textContent='播放';return}b.textContent='暫停';const st=Math.max(1,Math.round(P.ny/64));timer=setInterval(()=>{line+=st;if(line>P.ny)line=1;$('#line').value=line;$('#lineval').textContent=line+' / '+P.ny;drawSeq();drawK()},90)});
+const roS=new ResizeObserver(drawSeq);roS.observe(sv);
+const roK=new ResizeObserver(drawK);roK.observe(ks);
+fill();update();
+
+// events table
+const EVT=[['RF 脈衝','makeSincPulse、makeBlockPulse、makeArbitraryRf','激發、反轉、飽和'],['梯形梯度','makeTrapezoid','選層、相位編碼、讀出、spoiler'],['任意梯度','makeArbitraryGrad、makeExtendedTrapezoid','螺旋、自訂波形'],['ADC','makeAdc','接收訊號'],['延遲','makeDelay','填滿 TE / TR'],['標籤','makeLabel','LIN、SLC 等計數器，供重建'],['觸發','makeTrigger、makeDigitalOutputPulse','心電同步、外部設備']];
+$('#evt').innerHTML=EVT.map(r=>'<tr>'+r.map((c,i)=>`<td>${i===1?'<code>'+esc(c)+'</code>':esc(c)}</td>`).join('')+'</tr>').join('');
+
+// converter
+const conv=()=>{
+ const g=parseFloat($('#gv').value),gu=$('#gu').value;let mT=gu==='mT/m'?g:gu==='Hz/m'?g/GAM*1e3:g*10;
+ $('#gout').textContent=isFinite(mT)?`${mT.toFixed(3)} mT/m = ${(mT*1e-3*GAM).toFixed(0)} Hz/m = ${(mT/10).toFixed(3)} G/cm`:'—';
+ const s=parseFloat($('#sv').value),su=$('#su').value,T=su==='T/m/s'?s:s/GAM;
+ $('#sout').textContent=isFinite(T)?`${T.toFixed(2)} T/m/s = ${(T*GAM/1e6).toFixed(1)} ×10⁶ Hz/m/s；0→28 mT/m 需 ${(28e-3/T*1e6).toFixed(0)} µs`:'—';
+ const f=parseFloat($('#kf').value)*1e-3,n=parseFloat($('#kn').value);
+ $('#kout').textContent=(f>0&&n>0)?`Δk = ${(1/f).toFixed(3)} 1/m，kmax = ${(n/2/f).toFixed(1)} 1/m，解析度 ${(f/n*1e3).toFixed(2)} mm`:'—';
+};
+['gv','gu','sv','su','kf','kn'].forEach(id=>$('#'+id).addEventListener('input',conv));conv();
+
+// verification table + checklist
+const VER=[['時序檢查','[ok, err] = seq.checkTiming','ok, err = seq.check_timing()','柵格對齊、死時間與 ringdown'],['波形圖',"seq.plot('timeRange', [0 2*TR])",'seq.plot(time_range=(0, 2*TR))','RF、ADC、三軸梯度時間'],['k-space','seq.calculateKspacePP()','seq.calculate_kspace()','取樣覆蓋、回波中心在 k = 0'],['測試報告','disp(seq.testReport)','print(seq.test_report())','TE/TR、梯度與 slew、總時間'],['PNS',"seq.calcPNS('機型.asc')",'seq.calculate_pns(...)','刺激估計值低於 100%']];
+$('#ver').innerHTML=VER.map(r=>'<tr>'+r.map((c,i)=>`<td>${i===1||i===2?'<code>'+esc(c)+'</code>':esc(c)}</td>`).join('')+'</tr>').join('');
+const CK=['checkTiming 回傳 ok','testReport 的 TE、TR、總時間與設計相符','最大梯度與 slew 低於機器實際上限','PNS 估計低於 100%（建議保留餘裕，如 < 80%）','k-space 軌跡符合預期','已設 FOV 與 Name definition','直譯器版本與 .seq 格式相容','先用假體測試，再用受試者'];
+let ck=store.get('pq-check',[]);
+const drawCk=()=>{$('#check').innerHTML=CK.map((t,i)=>`<label><input type="checkbox" data-i="${i}" ${ck.includes(i)?'checked':''}><span>${esc(t)}</span></label>`).join('');$('#ckcount').textContent=`已完成 ${ck.length} / ${CK.length}`};
+$('#check').addEventListener('change',e=>{const i=+e.target.dataset.i;ck=e.target.checked?[...new Set([...ck,i])]:ck.filter(x=>x!==i);store.set('pq-check',ck);$('#ckcount').textContent=`已完成 ${ck.length} / ${CK.length}`});
+drawCk();
+
+// .seq explorer
+const SEQ=[['# Pulseq sequence file','註解行。檔頭由 seq.write 自動產生，包含工具版本。'],['[VERSION]','格式版本區段。直譯器會先讀它，版本不相容就拒絕執行。',1],['major 1','主版本號。'],['minor 5','次版本號：1.5.x 的檔案需要 1.5.x 的直譯器。'],['revision 0','修訂號。'],['[DEFINITIONS]','全域設定：柵格時間、FOV、Name，以及你用 setDefinition 加的任何鍵值。',1],['AdcRasterTime 1e-07','ADC 柵格 100 ns，dwell 必須是它的整數倍。'],['BlockDurationRaster 1e-05','區塊長度柵格 10 µs。BLOCKS 裡的 DUR 就以它為單位。'],['GradientRasterTime 1e-05','梯度柵格 10 µs。'],['RadiofrequencyRasterTime 1e-06','RF 柵格 1 µs。'],['FOV 0.256 0.256 0.003','視野（公尺），Siemens 直譯器用它來定位。'],['Name gre','序列名稱，會顯示在掃描介面。'],['[BLOCKS]','一列一個區塊：編號、長度、各事件 ID（0 = 無）。',1],['# NUM DUR RF  GX  GY  GZ  ADC  EXT','欄位：區塊編號、長度（×10 µs）、RF、三軸梯度、ADC、擴充（標籤）的 ID。'],['   1  317   1   0   0   1   0    0','區塊 1：RF 1 號 + Gz 1 號（選層），3.17 ms。'],['   2  100   0   2   3   4   0    0','區塊 2：gxPre、gyPre、gzReph 同時作用，1 ms。GY 的 ID 會隨每個 TR 改變。'],['   3   80   0   0   0   0   0    0','區塊 3：純延遲 0.8 ms，把回波推到 TE。'],['   4  326   0   5   0   0   1    1','區塊 4：讀出梯度 + ADC，EXT 1 號是 LIN 標籤。'],['   5  254   0   6   7   8   0    0','區塊 5：spoiler 與 Gy 回繞，補足到 TR。'],['[RF]','RF 事件：ID、振幅（Hz）、振幅/相位/時間形狀 ID、延遲（µs）、頻率與相位偏移。',1],['1  145.2 1 2 0 100 0 0','RF 1：振幅 145.2 Hz，形狀 1、2，延遲 100 µs（= rfDeadTime）。'],['[TRAP]','梯形梯度：ID、振幅（Hz/m）、上升、平台、下降、延遲（µs）。',1],['1  444444 70 3000 70 30','Gz 1：選層梯度，平台 3000 µs 等於 RF 長度。'],['5  156250 30 3200 30 0','Gx 5：讀出梯度，平台 3.2 ms 等於讀出時間。'],['[ADC]','ADC：ID、點數、dwell（ns）、延遲（µs）、頻率與相位偏移。',1],['1  128 25000 30 0 0','ADC 1：128 點、dwell 25 µs，延遲 30 µs 對齊讀出梯度平台起點。'],['[SHAPES]','壓縮過的波形數據（RF 振幅、相位等）。',1],['[SIGNATURE]','MD5 簽章。檔案被手改後簽章不符，直譯器會察覺。',1]];
+$('#seqlines').innerHTML=SEQ.map((s,i)=>`<span class="ln${s[2]?' k':''}" tabindex="0" role="button" data-i="${i}">${esc(s[0])}</span>`).join('');
+const pick=i=>{document.querySelectorAll('.ln').forEach(n=>n.classList.toggle('sel',+n.dataset.i===i));$('#seqexp').innerHTML=`<code>${esc(SEQ[i][0].trim())}</code><p style="margin-top:8px">${esc(SEQ[i][1])}</p>`};
+$('#seqlines').addEventListener('click',e=>{const n=e.target.closest('.ln');if(n)pick(+n.dataset.i)});
+$('#seqlines').addEventListener('keydown',e=>{const n=e.target.closest('.ln');if(n&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pick(+n.dataset.i)}});
+pick(15);
+
+// errors
+const ERR=[['checkTiming 報 not aligned to raster','時間不是柵格（10 µs）的整數倍','ceil(t/sys.gradRasterTime)*sys.gradRasterTime 對齊'],['makeDelay 報錯或延遲為負','TE/TR 太短，事件塞不下','加長 TE/TR、縮短讀出、提高 slew 或縮短脈衝'],['dead time 或 ringdown 不足','RF/ADC 前後空白不夠','事件加 delay，或用 calcDuration 自動計入'],['區塊邊界梯度不連續','任意波形結尾不為零，下一區塊沒接上','用 makeExtendedTrapezoid 讓頭尾值一致'],['影像偏移或模糊','預置梯度面積算錯；ADC 沒對到平台','畫 k-space 檢查；ADC 的 Delay = gx.riseTime'],['影像有條紋或鬼影','RF spoiling 時沒同步轉 ADC 相位','adc.phaseOffset 跟 rf.phaseOffset 一起更新'],['層位置不對','頻率偏移正負號或單位錯','freqOffset = gz.amplitude × 位置（Hz/m × m）'],['機器拒絕執行','格式版本不相容；SAR 或梯度超限','對齊工具與直譯器版本；降低翻轉角或加長 TR'],['PNS 過高','slew 太大或梯度切換太頻繁','降低 MaxSlew、加長上升時間']];
+const drawErr=()=>{const q=$('#errq').value.trim().toLowerCase();const rows=ERR.filter(r=>!q||r.join(' ').toLowerCase().includes(q));$('#errs').innerHTML=rows.map(r=>'<tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>').join('');$('#errempty').hidden=rows.length>0};
+$('#errq').addEventListener('input',drawErr);drawErr();
+
+// quiz
+const QZ=[['同一個 addBlock 裡的事件如何執行？',['依序一個接一個','同時開始，各自可設 delay','隨機順序'],1,'區塊內事件同時開始；要錯開就設事件的 delay 屬性。'],['Pulseq 內部的梯度單位是？',['mT/m','G/cm','Hz/m'],2,'梯度已乘上 γ，用 Hz/m，積分直接得到 k（1/m）。'],['FOV = 256 mm 時，Δk 是多少？',['3.906 1/m','0.256 1/m','256 1/m'],0,'Δk = 1/FOV = 1/0.256 m ≈ 3.906 1/m。'],['GRE 的 gxPre 面積應設為？',['讀出面積','−讀出面積 / 2','0'],1,'先往負方向走一半，回波中心才會落在讀出中間。'],['RF spoiling 時還要記得更新什麼？',['ADC 的相位偏移','切片厚度','FOV'],0,'接收相位要跟著 RF 相位轉，否則影像會出現偽影。'],['延遲算出來是負值代表？',['掃描儀故障','TE 或 TR 設太短','必須改用 Python'],1,'事件放不進設定的時間，要加長 TE/TR 或縮短事件。']];
+let qa=store.get('pq-quiz',{});
+const drawQ=()=>{
+ $('#qs').innerHTML=QZ.map((q,i)=>`<div class="q"><b>${i+1}. ${esc(q[0])}</b><div class="opts">${q[1].map((o,j)=>{const a=qa[i];const c=a===undefined?'':j===q[2]?'right':j===a?'wrong':'';return `<button type="button" class="${c}" data-q="${i}" data-o="${j}" ${a!==undefined?'aria-disabled="true"':''}>${esc(o)}</button>`}).join('')}</div>${qa[i]!==undefined?`<div class="fb">${qa[i]===q[2]?'答對了。':'再想想：'}${esc(q[3])}</div>`:''}</div>`).join('');
+ const n=Object.keys(qa).length,c=Object.entries(qa).filter(([i,a])=>QZ[i][2]===a).length;
+ $('#score').textContent=n?`${c} / ${QZ.length} 答對`:'';
+};
+$('#qs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.q;if(qa[i]!==undefined)return;qa[i]=+b.dataset.o;store.set('pq-quiz',qa);drawQ()});
+$('#qreset').addEventListener('click',()=>{qa={};store.set('pq-quiz',qa);drawQ()});
+drawQ();
+}
+</script>
+</body>
+</html>
