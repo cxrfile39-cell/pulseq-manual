@@ -209,8 +209,8 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
   <h2>需要的軟體與設備</h2>
   <div class="tbl"><table class="stack"><thead><tr><th>用途</th><th>需要什麼</th></tr></thead><tbody>
    <tr><td>看網頁、玩 GRE 實驗室</td><td>任何瀏覽器，手機也可以</td></tr>
-   <tr><td>寫序列</td><td>一般電腦，加上 MATLAB（需授權）或免費的 GNU Octave；或 Python 3.10 以上與 <code>pip install pypulseq</code>；Google Colab 也行</td></tr>
-   <tr><td>模擬（選用）</td><td>MRzero（Python）或 KomaMRI（Julia），皆免費</td></tr>
+   <tr><td>寫序列</td><td>一般電腦，加上 <a href="https://www.mathworks.com/products/matlab.html">MATLAB</a>（需授權）或免費的 <a href="https://octave.org/download">GNU Octave</a>；或 <a href="https://www.python.org/downloads/">Python 3.10 以上</a>與 <code>pip install pypulseq</code>；<a href="https://colab.research.google.com/">Google Colab</a> 也行。<a href="#dl">完整下載連結</a></td></tr>
+   <tr><td>模擬（選用）</td><td><a href="https://pypi.org/project/MRzeroCore/">MRzero</a>（Python）或 <a href="https://github.com/JuliaHealth/KomaMRI.jl">KomaMRI</a>（Julia），皆免費</td></tr>
    <tr><td>上機掃描</td><td>已安裝 Pulseq 直譯器的 MRI 掃描儀（通常需與廠商簽研究合作協議）、假體；掃描人體需 IRB 核准</td></tr>
    <tr><td>重建</td><td>MATLAB 的 mapVBVD 或 Python 的 twixtools（Siemens 原始資料）</td></tr>
   </tbody></table></div>
@@ -223,6 +223,19 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
  <p>實驗室已有 MATLAB 就用 MATLAB 版（範例最完整、新功能最先支援）；否則用 PyPulseq。PyPulseq 目前穩定版為 v1.5.0，需要 Python 3.10 以上，尚未支援 Pulseq 1.5.1 的新功能。</p>
  <div class="code" data-k="install"></div>
  <p class="note">沒有本機環境時，可以在 Google Colab 執行 <code>!pip install pypulseq</code> 直接開始。</p>
+ <h3 id="dl">下載與安裝連結</h3>
+ <div class="tbl"><table class="stack"><thead><tr><th>軟體</th><th>用途</th><th>下載／安裝</th><th>備註</th></tr></thead><tbody>
+  <tr><td>MATLAB</td><td>寫序列（Pulseq 官方主線）</td><td><a href="https://www.mathworks.com/products/matlab.html">MathWorks 官網</a></td><td>需授權；許多學校有校園授權，先問校內資訊中心</td></tr>
+  <tr><td>GNU Octave</td><td>MATLAB 的免費替代</td><td><a href="https://octave.org/download">octave.org/download</a></td><td>目前穩定版 11.3.0；Windows 提供 64 位元安裝檔，macOS 可用 Homebrew</td></tr>
+  <tr><td>Pulseq（MATLAB 版）</td><td>序列設計工具箱</td><td><a href="https://github.com/pulseq/pulseq">github.com/pulseq/pulseq</a></td><td>按 Code → Download ZIP，或 git clone</td></tr>
+  <tr><td>Python</td><td>執行 PyPulseq</td><td><a href="https://www.python.org/downloads/">python.org/downloads</a></td><td>需要 3.10 以上；Windows 安裝時勾選「Add python.exe to PATH」</td></tr>
+  <tr><td>PyPulseq</td><td>Python 版序列設計</td><td><a href="https://pypi.org/project/pypulseq/">PyPI 頁面</a></td><td><code>pip install pypulseq</code>；目前 1.5.0.post2</td></tr>
+  <tr><td>Google Colab</td><td>免安裝，在瀏覽器跑 Python</td><td><a href="https://colab.research.google.com/">colab.research.google.com</a></td><td>用 Google 帳號登入，第一格輸入 <code>!pip install pypulseq</code></td></tr>
+  <tr><td>MRzero</td><td>Python 序列模擬</td><td><a href="https://pypi.org/project/MRzeroCore/">PyPI 頁面</a>、<a href="https://mrzero-core.readthedocs.io/">說明文件</a></td><td><code>pip install MRzeroCore</code></td></tr>
+  <tr><td>Julia</td><td>執行 KomaMRI</td><td><a href="https://julialang.org/downloads/">julialang.org/downloads</a></td><td>官方建議用 juliaup 安裝</td></tr>
+  <tr><td>KomaMRI</td><td>Julia 序列模擬（有圖形介面）</td><td><a href="https://github.com/JuliaHealth/KomaMRI.jl">GitHub</a>、<a href="https://juliahealth.github.io/KomaMRI.jl/dev/">說明文件</a></td><td>Julia 中輸入 <code>] add KomaMRI</code>，再 <code>using KomaMRI; KomaUI()</code></td></tr>
+ </tbody></table></div>
+ <p class="note">版本資訊查於 2026-11-27。</p>
 </div></section>
 
 <section class="band lesson" id="core"><div class="wrap">
