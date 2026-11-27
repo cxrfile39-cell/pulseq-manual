@@ -101,6 +101,16 @@ th{font-weight:700;border-bottom:2px solid var(--ink)}
 .updlist div{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:15px}
 .badge{font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;white-space:nowrap;border:1px solid var(--line);color:var(--mute)}
 .badge.new{background:var(--red);border-color:var(--red);color:var(--bg)}
+.term{font:inherit;color:inherit;background:none;border:0;border-bottom:1.5px dotted var(--blue);border-radius:0;padding:0;min-height:0;cursor:help;line-height:inherit}
+.term:hover{color:var(--blue)}
+.pop{position:absolute;z-index:20;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px color-mix(in srgb,var(--ink) 18%,transparent);font-size:15px}
+.pop p{margin:6px 0}
+.src{font-size:13px;color:var(--mute);margin-top:6px}
+.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,22em),1fr));gap:12px 28px;margin:0}
+.gi{border-top:1px solid var(--line);padding-top:10px;scroll-margin-top:72px}
+.gi:target{background:color-mix(in srgb,var(--blue) 10%,transparent)}
+.gi dt{font-weight:700}
+.gi dd{margin:4px 0 0}
 footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
 @media(max-width:900px){.lab{grid-template-columns:minmax(0,1fr)}.lab .side{order:2}.two,.cols,.seqv{grid-template-columns:minmax(0,1fr)}.explain{position:static}}
 @media(max-width:600px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:8px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute);font-size:12px}.fig{min-height:300px}}
@@ -116,7 +126,7 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
  </div>
 </header>
 <nav aria-label="章節"><div class="wrap">
- <a href="#lab">GRE 實驗室</a><a href="#intro">認識 Pulseq</a><a href="#outcome">學完能做什麼</a><a href="#install">安裝</a><a href="#core">核心概念</a><a href="#fid">FID</a><a href="#verify">驗證</a><a href="#seqfile">.seq 檔</a><a href="#scan">上機</a><a href="#recon">重建</a><a href="#debug">除錯</a><a href="#quiz">測驗</a><a href="#res">資源</a>
+ <a href="#lab">GRE 實驗室</a><a href="#intro">認識 Pulseq</a><a href="#outcome">學完能做什麼</a><a href="#install">安裝</a><a href="#core">核心概念</a><a href="#fid">FID</a><a href="#verify">驗證</a><a href="#seqfile">.seq 檔</a><a href="#scan">上機</a><a href="#recon">重建</a><a href="#debug">除錯</a><a href="#quiz">測驗</a><a href="#glossary">名詞解釋</a><a href="#res">資源</a>
 </div></nav>
 
 <div id="updbanner" class="upd" hidden><div class="wrap"><span id="updtext"></span> <a href="#res">查看</a></div></div>
@@ -310,6 +320,15 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
  <button id="qreset" type="button">重新作答</button>
 </div></section>
 
+<section class="band lesson" id="glossary"><div class="wrap">
+ <h2>名詞解釋</h2>
+ <p>網頁中帶底線虛線的名詞都可以點一下看定義。定義由本手冊以中文整理，每條都附上出處，可點進原文查證。</p>
+ <label for="glq">搜尋名詞</label>
+ <input id="glq" type="search" placeholder="例如：k-space、SAR、柵格" style="max-width:420px;display:block;margin:6px 0 16px">
+ <dl class="gl" id="gls"></dl>
+ <p class="note" id="glempty" hidden>沒有符合的名詞。</p>
+</div></section>
+
 <section class="band lesson" id="res"><div class="wrap cols">
  <div>
   <h2>四週學習路線</h2>
@@ -337,6 +356,7 @@ footer{border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
  </div>
 </div></section>
 </main>
+<div id="pop" class="pop" role="dialog" aria-label="名詞定義" hidden></div>
 <footer class="band"><div class="wrap">製作者：JH CHIU x Claude.ai opus 5.5。版本資訊以 2026 年 11 月為準。系統限制數值為 Siemens 機型的典型值，請向你的機器管理者確認實際規格。</div></footer>
 
 <script>
@@ -702,6 +722,106 @@ const drawQ=()=>{
 $('#qs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.q;if(qa[i]!==undefined)return;qa[i]=+b.dataset.o;store.set('pq-quiz',qa);drawQ()});
 $('#qreset').addEventListener('click',()=>{qa={};store.set('pq-quiz',qa);drawQ()});
 drawQ();
+
+// glossary
+const MQ='https://mriquestions.com/';
+const S={
+ layton:['Layton et al., MRM 2017（Pulseq 原始論文）','https://doi.org/10.1002/mrm.26235'],
+ site:['Pulseq 官方網站','https://pulseq.github.io/'],
+ spec:['Pulseq 檔案格式規格書','https://pulseq.github.io/specification.pdf'],
+ times:['Pulseq 時間與波形規格（含 v1.5.0）','https://pulseq.github.io/pulseq_shapes_and_times.pdf'],
+ pypdoc:['PyPulseq 文件','https://pypulseq.readthedocs.io/'],
+ pyp:['PyPulseq GitHub','https://github.com/imr-framework/pypulseq'],
+ hornak:['Hornak, The Basics of MRI 第 4 章','https://www.cis.rit.edu/htbooks/mri/chap-4/chap-4.htm'],
+ ucla:['UCLA M219 講義：空間定位','https://labs.dgsom.ucla.edu/file/294318/M219_Lecture09_Spatial_Localization_I.pdf'],
+ wphys:['Wikipedia: Physics of MRI','https://en.wikipedia.org/wiki/Physics_of_magnetic_resonance_imaging'],
+ wgamma:['Wikipedia: Gyromagnetic ratio','https://en.wikipedia.org/wiki/Gyromagnetic_ratio'],
+ mqk:['MRIquestions: What is k-space?',MQ+'what-is-k-space'],
+ wk:['Wikipedia: k-space in MRI','https://en.wikipedia.org/wiki/K-space_in_magnetic_resonance_imaging'],
+ mqgrid:['MRIquestions: k-space grid',MQ+'k-space-grid.html'],
+ realmri:['k-Space without Math','https://realmri.readthedocs.io/en/latest/kSpaceWithoutMath.html'],
+ mqfid:['MRIquestions: Free induction decay',MQ+'free-induction-decay.html'],
+ wgre:['Wikipedia: Gradient echo','https://en.wikipedia.org/wiki/Gradient_echo'],
+ mqgre:['MRIquestions: Spoiled GRE parameters',MQ+'spoiled-gre-parameters.html'],
+ mqslice:['MRIquestions: Slice-selective excitation',MQ+'slice-selective-excitation.html'],
+ pauly:['Pauly, RF Pulse Design（Stanford）','https://ece-classes.usc.edu/ee591/library/Pauly-RF.pdf'],
+ mqbw:['MRIquestions: Receiver bandwidth',MQ+'receiver-bandwidth.html'],
+ mqspoil:['MRIquestions: Spoiling – what and how',MQ+'spoiling---what-and-how.html'],
+ rad229:['Stanford Rad229：RF spoiling 講義','https://web.stanford.edu/class/rad229/Notes/Lecture-09/Rad229_2020_Lecture09D-RFSpoiling.pdf'],
+ mqpns:['MRIquestions: Nerve stimulation',MQ+'nerve-stimulation.html'],
+ chronik:['Chronik, PNS in MRI gradient coils（ISMRM 2009）','https://cds.ismrm.org/protected/09MProceedings/PDFfiles/Wed%20A18_04%20Chronik.pdf'],
+ mqsar:['MRIquestions: What is SAR?',MQ+'what-is-sar.html'],
+ rpsar:['Radiopaedia: Specific absorption rate','https://radiopaedia.org/articles/specific-absorption-rate'],
+ wirb:['Wikipedia: Institutional review board','https://en.wikipedia.org/wiki/Institutional_review_board'],
+ wphantom:['Wikipedia: Imaging phantom','https://en.wikipedia.org/wiki/Imaging_phantom'],
+ koma:['KomaMRI.jl GitHub','https://github.com/JuliaHealth/KomaMRI.jl'],
+ jemris:['JEMRIS（Helmholtz Research Software）','https://helmholtz.software/software/jemris'],
+ wnufft:['Wikipedia: Non-uniform DFT','https://en.wikipedia.org/wiki/Non-uniform_discrete_Fourier_transform'],
+ toppe:['Nielsen & Noll, TOPPE（MRM 2018）','https://pmc.ncbi.nlm.nih.gov/articles/PMC6134833'],
+ mapvbvd:['mapVBVD GitHub','https://github.com/pehses/mapVBVD'],
+ twix:['twixtools GitHub','https://github.com/pehses/twixtools'],
+ wse:['Wikipedia: Spin echo','https://en.wikipedia.org/wiki/Spin_echo'],
+ wepi:['Wikipedia: Echo-planar imaging','https://en.wikipedia.org/wiki/Echo-planar_imaging']
+};
+const GL=[
+ ['pulseq','Pulseq',['Pulseq'],'開源、跨廠商的 MR 脈衝序列框架。用 MATLAB/Octave 或 Python 描述序列，存成 .seq 檔，再由各廠商的直譯器在掃描儀上執行。',['layton','site']],
+ ['interp','直譯器（interpreter）',['直譯器'],'安裝在掃描儀上的程式，負責讀取 .seq 檔並轉成該廠牌硬體能執行的指令。每個廠牌各有自己的直譯器。',['layton','site']],
+ ['seq','.seq 檔',['.seq'],'Pulseq 的純文字序列檔，記錄所有 RF、梯度、ADC 事件與時間；重複的事件只存一次並以編號引用。',['spec']],
+ ['pyp','PyPulseq',['PyPulseq'],'Pulseq 的 Python 版本，函式名稱改用蛇形命名（如 make_trapezoid），輸出相同格式的 .seq 檔。',['pyp','pypdoc']],
+ ['psd','脈衝序列與時序圖',['脈衝序列','時序圖'],'脈衝序列是一組依時間安排的 RF 脈衝、梯度與取樣動作；時序圖把它們畫在共同時間軸上，一軸一列。',['hornak','ucla']],
+ ['rf','RF 脈衝與翻轉角',['RF','翻轉角','硬脈衝'],'RF（射頻）脈衝在 Larmor 頻率附近發射，把磁化向量轉離 z 軸；轉動的角度稱為翻轉角。沒有形狀調變的矩形脈衝稱為硬脈衝。',['hornak','mqslice']],
+ ['grad','梯度（Gx、Gy、Gz）',['梯度'],'疊加在主磁場上、隨位置線性變化的磁場。它讓不同位置的自旋以不同頻率進動，是選層、相位編碼與頻率編碼的基礎。',['wphys','ucla']],
+ ['slew','轉換率（slew rate）',['轉換率','slew','MaxSlew'],'梯度強度變化的速度（dG/dt），單位 T/m/s。越大梯度切換越快，但也越容易引起周邊神經刺激。',['chronik','mqpns']],
+ ['gamma','旋磁比 γ',['旋磁比','γ'],'原子核進動頻率與磁場強度的比例常數；氫為 42.576 MHz/T。Pulseq 內部把梯度與 RF 都乘上 γ，改用 Hz 為單位。',['wgamma']],
+ ['kspace','k-space',['k-space'],'存放 MR 原始資料的空間頻率座標系。梯度對時間的積分決定目前在 k-space 的位置；資料填滿後做反傅立葉轉換即得影像。',['mqk','wk']],
+ ['dk','Δk 與 FOV',['Δk','FOV'],'Δk 是 k-space 相鄰取樣點的間距，視野（FOV）= 1/Δk；k-space 的最大範圍決定空間解析度。',['mqgrid']],
+ ['tetr','TE 與 TR',['TE','TR'],'TE（回波時間）：從激發脈衝中心到回波中心的時間。TR（重複時間）：相鄰兩次激發之間的時間。',['hornak']],
+ ['fid','FID（自由感應衰減）',['FID','自由感應衰減'],'激發後橫向磁化進動所產生、隨 T2* 衰減的訊號，是最基本的 MR 訊號。',['mqfid','hornak']],
+ ['gre','GRE / FLASH',['GRE','FLASH','梯度回波'],'梯度回波序列：不用 180° 重聚相脈衝，而是用正負梯度讓訊號重新聚相形成回波。FLASH 是加入破壞（spoiling）的低翻轉角 GRE。',['wgre','mqgre']],
+ ['slice','選層與 sinc 脈衝',['選層','sinc'],'RF 脈衝與選層梯度同時作用時，只有頻率落在脈衝頻寬內的那一層會被激發；sinc 形狀的脈衝可得到接近矩形的切片輪廓。',['mqslice','ucla']],
+ ['tbw','時間頻寬積（TBW）',['時間頻寬積','timeBwProduct','TBW'],'RF 脈衝長度 × 頻寬，決定脈衝形狀與切片輪廓銳利度。TBW 相同的脈衝形狀相同；固定長度時 TBW 越大頻寬越寬。',['pauly']],
+ ['enc','相位編碼與頻率編碼（讀出）',['相位編碼','讀出'],'相位編碼在讀出前施加不同面積的梯度，讓每個 TR 取到 k-space 的不同一行；頻率編碼（讀出）在取樣時施加固定梯度，把位置轉成頻率。',['ucla']],
+ ['adc','ADC、dwell time 與頻寬',['ADC','dwell','每像素頻寬'],'ADC 把接收訊號數位化。dwell time 是相鄰取樣點的間隔；總接收頻寬 = 1/dwell，每像素頻寬 = 1/讀出時間。',['mqbw']],
+ ['spoil','Spoiler 與 RF spoiling',['spoiler','RF spoiling','spoiling'],'在 TR 結尾消除殘留橫向磁化的方法：梯度 spoiler 用額外梯度打散相位；RF spoiling 讓每個 TR 的 RF 相位以二次方式遞增（常用 117°）。',['mqspoil','rad229']],
+ ['preph','預置、重聚相與回繞梯度',['預置','重聚相','回繞','prephaser','rephaser'],'在主要梯度前後加的反向梯度，用來把 k-space 位置移到起點（預置）、抵消選層造成的相位（重聚相），或把相位編碼歸零（回繞）。',['ucla']],
+ ['dead','死時間與 ringdown',['死時間','dead time','ringdown','rfDeadTime','rfRingdownTime','adcDeadTime'],'硬體在 RF 或 ADC 事件前後需要的空白時間，例如 RF 放大器開關、線圈餘響。Pulseq 在計算區塊長度時會把它們算進去。',['times']],
+ ['raster','時間柵格（raster）',['柵格','raster'],'硬體能設定的最小時間單位。梯度通常 10 µs、RF 1 µs、ADC 100 ns；所有事件時間都必須是柵格的整數倍。',['times','spec']],
+ ['block','區塊與事件（block / event）',['區塊','事件','addBlock'],'事件是單一的 RF、梯度、ADC、延遲或標籤；區塊是同時開始的一組事件。序列就是一串依序執行的區塊。',['spec','layton']],
+ ['label','標籤（label）',['標籤','LIN','SLC'],'寫入原始資料計數器的資訊（如 LIN 相位編碼、SLC 層），讓重建程式知道每筆資料屬於哪裡；不佔時間。',['spec']],
+ ['pns','PNS（周邊神經刺激）',['PNS','周邊神經刺激'],'快速變化的梯度磁場在體內感應電場，可能刺激周邊神經，造成刺痛或肌肉抽動。與梯度變化幅度及時間有關，不只取決於 slew rate。',['mqpns','chronik']],
+ ['sar','SAR（比吸收率）',['SAR'],'人體組織吸收 RF 能量的速率（W/kg）。與翻轉角平方、主磁場強度平方成正比；高翻轉角、短 TR、多個重聚相脈衝會提高 SAR。',['mqsar','rpsar']],
+ ['irb','IRB（人體試驗委員會）',['IRB'],'審查涉及人類受試者研究的倫理委員會；用新序列掃描人體前需取得核准。',['wirb']],
+ ['phantom','假體（phantom）',['假體'],'模擬人體組織特性的測試物，用於在掃描真人前驗證序列與影像品質。',['wphantom']],
+ ['sim','序列模擬器',['模擬器','KomaMRI','JEMRIS','MRzero'],'以 Bloch 方程式計算自旋行為、模擬掃描結果的軟體。KomaMRI 與 JEMRIS 都能讀取 Pulseq 格式。',['koma','jemris']],
+ ['fft','反傅立葉轉換（iFFT）',['iFFT','傅立葉'],'把 k-space 資料轉回影像空間的數學運算；笛卡兒網格的資料可直接用快速傅立葉轉換。',['realmri','wk']],
+ ['nufft','非笛卡兒軌跡與 NUFFT',['非笛卡兒','NUFFT','螺旋','放射狀'],'螺旋、放射狀等軌跡的取樣點不在規則網格上，需用非均勻傅立葉轉換（NUFFT）或先網格化再重建。',['wnufft','mqgrid']],
+ ['toppe','TOPPE',['TOPPE'],'GE 掃描儀上的序列檔案格式與直譯器，可用來在 GE 上執行 Pulseq 序列。',['toppe']],
+ ['twix','TWIX、mapVBVD、twixtools',['TWIX','mapVBVD','twixtools'],'TWIX 是 Siemens 原始資料格式（.dat）；mapVBVD（MATLAB）與 twixtools（Python）是讀取它的開源工具。',['mapvbvd','twix']],
+ ['se','SE、TSE、EPI',['TSE','EPI','Spin Echo'],'SE（自旋回波）用 180° 脈衝重聚相；TSE 在一個 TR 內取多個自旋回波；EPI 在一次激發後快速來回讀出多行 k-space。',['wse','wepi']]
+];
+const GI={};GL.forEach(g=>GI[g[0]]=g);
+const refHTML=ids=>ids.map(k=>`<a href="${S[k][1]}">${esc(S[k][0])}</a>`).join('；');
+$('#gls').innerHTML=GL.map(([id,t,,d,r])=>`<div class="gi" id="g-${id}" data-s="${esc((t+' '+d).toLowerCase())}"><dt>${esc(t)}</dt><dd>${esc(d)}<div class="src">出處：${refHTML(r)}</div></dd></div>`).join('');
+$('#glq').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();let n=0;document.querySelectorAll('.gi').forEach(g=>{const v=!q||g.dataset.s.includes(q);g.hidden=!v;if(v)n++});$('#glempty').hidden=n>0});
+// tap-to-define: mark first occurrence of each term per section
+const pats=[];GL.forEach(g=>g[2].forEach(w=>pats.push([w,g[0]])));pats.sort((a,b)=>b[0].length-a[0].length);
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const RX=new RegExp(pats.map(([w])=>/^[A-Za-z]/.test(w)?`(?<![A-Za-z])${reEsc(w)}(?![A-Za-z])`:reEsc(w)).join('|'));
+const findId=m=>{for(const [w,id] of pats)if(w===m)return id};
+document.querySelectorAll('main section:not(#glossary):not(#lab)').forEach(sec=>{
+ const used=new Set();
+ const walker=document.createTreeWalker(sec,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest('code,pre,a,button,h1,h2,h3,label,.code,.seqv,.quiz,svg,th,.updbox')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+ const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+ nodes.forEach(node=>{
+  let txt=node.nodeValue,frag=null,last=0,m;const rx=new RegExp(RX.source,'g');
+  while((m=rx.exec(txt))){const id=findId(m[0]);if(!id||used.has(id))continue;used.add(id);frag=frag||document.createDocumentFragment();frag.append(txt.slice(last,m.index));const b=document.createElement('button');b.type='button';b.className='term';b.dataset.g=id;b.textContent=m[0];frag.append(b);last=m.index+m[0].length}
+  if(frag){frag.append(txt.slice(last));node.replaceWith(frag)}
+ });
+});
+const pop=$('#pop');
+const closePop=()=>{pop.hidden=true};
+document.addEventListener('click',e=>{const b=e.target.closest('.term');if(b){const g=GI[b.dataset.g];pop.innerHTML=`<b>${esc(g[1])}</b><p>${esc(g[3])}</p><div class="src">出處：${refHTML(g[4])}</div><a href="#g-${g[0]}">在名詞解釋中查看</a>`;pop.hidden=false;const r=b.getBoundingClientRect(),w=Math.min(340,innerWidth-32);pop.style.width=w+'px';pop.style.left=Math.max(16,Math.min(r.left+scrollX,scrollX+innerWidth-w-16))+'px';pop.style.top=(r.bottom+scrollY+8)+'px';return}if(!e.target.closest('#pop'))closePop()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop()});
 
 // resource update check (works on GitHub Pages; blocked where cross-site fetch is not allowed)
 const BASE='2026-11-27';
